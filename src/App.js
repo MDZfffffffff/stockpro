@@ -61,12 +61,21 @@ const salesData = [
 ];
 const catData = [{name:"โทรศัพท์",v:35},{name:"คอมพิวเตอร์",v:28},{name:"อุปกรณ์เสียง",v:18},{name:"โทรทัศน์",v:9},{name:"อื่นๆ",v:10}];
 
-async function callClaude(messages, system) {
+async function callClaude(messages, system, apiKey) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system,messages})
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": apiKey,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body:JSON.stringify({model:"claude-3-5-sonnet-20241022",max_tokens:1024,system,messages})
   });
+  if (!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    throw new Error(e?.error?.message || `HTTP ${r.status}`);
+  }
   const d = await r.json();
   return d.content?.[0]?.text || "ขออภัย เกิดข้อผิดพลาด";
 }
@@ -177,8 +186,6 @@ function LoginScreen({ onLogin }) {
   return (
     <div style={{minHeight:"100vh",background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",padding:"16px"}}>
       <div style={{display:"flex",width:"100%",maxWidth:"900px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 24px 64px rgba(0,0,0,0.12)"}}>
-
-        {/* Left branding panel */}
         <div style={{flex:1,background:"linear-gradient(160deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%)",padding:"48px 40px",display:"flex",flexDirection:"column",justifyContent:"space-between",minWidth:0}}>
           <div>
             <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"40px"}}>
@@ -201,63 +208,37 @@ function LoginScreen({ onLogin }) {
             ))}
           </div>
         </div>
-
-        {/* Right login panel */}
         <div style={{width:"380px",flexShrink:0,background:"white",padding:"48px 36px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
           <div style={{marginBottom:"32px"}}>
             <h1 style={{margin:"0 0 6px",fontSize:"22px",fontWeight:700,color:"#0f172a"}}>เข้าสู่ระบบ</h1>
             <p style={{margin:0,fontSize:"13px",color:"#64748b"}}>กรุณากรอกข้อมูลประจำตัวเพื่อเข้าใช้งาน</p>
           </div>
-
           <div style={{marginBottom:"16px"}}>
             <label style={{display:"block",fontSize:"11px",fontWeight:700,color:"#475569",marginBottom:"6px",textTransform:"uppercase",letterSpacing:"0.06em"}}>อีเมลผู้ใช้งาน</label>
-            <input
-              value={email}
-              onChange={e=>{setEmail(e.target.value);setErr("");}}
-              onKeyDown={e=>e.key==="Enter"&&login()}
-              placeholder="กรอกอีเมลของคุณ"
-              autoComplete="username"
+            <input value={email} onChange={e=>{setEmail(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&login()} placeholder="กรอกอีเมลของคุณ" autoComplete="username"
               style={{width:"100%",padding:"10px 12px",border:"1px solid #d1d5db",borderRadius:"8px",fontSize:"14px",color:"#0f172a",boxSizing:"border-box",outline:"none",transition:"border-color 0.15s"}}
-              onFocus={e=>e.target.style.borderColor="#1e3a8a"}
-              onBlur={e=>e.target.style.borderColor="#d1d5db"}
-            />
+              onFocus={e=>e.target.style.borderColor="#1e3a8a"} onBlur={e=>e.target.style.borderColor="#d1d5db"}/>
           </div>
-
           <div style={{marginBottom:"20px"}}>
             <label style={{display:"block",fontSize:"11px",fontWeight:700,color:"#475569",marginBottom:"6px",textTransform:"uppercase",letterSpacing:"0.06em"}}>รหัสผ่าน</label>
             <div style={{position:"relative"}}>
-              <input
-                value={pw}
-                onChange={e=>{setPw(e.target.value);setErr("");}}
-                onKeyDown={e=>e.key==="Enter"&&login()}
-                type={showPw?"text":"password"}
-                placeholder="กรอกรหัสผ่านของคุณ"
-                autoComplete="current-password"
+              <input value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&login()} type={showPw?"text":"password"} placeholder="กรอกรหัสผ่านของคุณ" autoComplete="current-password"
                 style={{width:"100%",padding:"10px 40px 10px 12px",border:"1px solid #d1d5db",borderRadius:"8px",fontSize:"14px",color:"#0f172a",boxSizing:"border-box",outline:"none",transition:"border-color 0.15s"}}
-                onFocus={e=>e.target.style.borderColor="#1e3a8a"}
-                onBlur={e=>e.target.style.borderColor="#d1d5db"}
-              />
+                onFocus={e=>e.target.style.borderColor="#1e3a8a"} onBlur={e=>e.target.style.borderColor="#d1d5db"}/>
               <button onClick={()=>setShowPw(s=>!s)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9ca3af",fontSize:"15px",padding:0,lineHeight:1}}>
                 {showPw?"🙈":"👁️"}
               </button>
             </div>
           </div>
-
           {err && (
             <div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:"8px",padding:"10px 12px",fontSize:"12px",color:"#dc2626",marginBottom:"16px",display:"flex",gap:"8px",alignItems:"flex-start",lineHeight:1.5}}>
-              <span style={{flexShrink:0,marginTop:"1px"}}>⚠️</span>
-              <span>{err}</span>
+              <span style={{flexShrink:0,marginTop:"1px"}}>⚠️</span><span>{err}</span>
             </div>
           )}
-
-          <button
-            onClick={login}
-            disabled={loading}
-            style={{width:"100%",padding:"12px",background:loading?"#374151":"#1e3a8a",color:"white",border:"none",borderRadius:"8px",fontSize:"14px",fontWeight:700,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.02em",transition:"background 0.15s"}}
-          >
+          <button onClick={login} disabled={loading}
+            style={{width:"100%",padding:"12px",background:loading?"#374151":"#1e3a8a",color:"white",border:"none",borderRadius:"8px",fontSize:"14px",fontWeight:700,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.02em",transition:"background 0.15s"}}>
             {loading ? "⏳ กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบ →"}
           </button>
-
           <p style={{margin:"24px 0 0",fontSize:"11px",color:"#94a3b8",textAlign:"center",lineHeight:1.6}}>
             หากลืมรหัสผ่านหรือพบปัญหาการเข้าใช้งาน<br/>กรุณาติดต่อผู้ดูแลระบบ
           </p>
@@ -273,14 +254,12 @@ function Dashboard({products, orders}) {
   const val = products.reduce((a,p) => a + p.price * p.stock, 0);
   const cost = products.reduce((a,p) => a + p.cost * p.stock, 0);
   const profit = val - cost;
-
   const kpis = [
     {label:"สินค้าทั้งหมด",  value:`${products.length} รายการ`, sub:`ใกล้หมด ${low.length} รายการ`, icon:"📦", color:"#1e3a8a", bg:"#eff6ff"},
     {label:"มูลค่าสต๊อก",   value:`฿${fmt(val)}`,              sub:`ต้นทุน ฿${fmt(cost)}`,        icon:"💰", color:"#065f46", bg:"#f0fdf4"},
     {label:"ออเดอร์ทั้งหมด",value:`${orders.length} รายการ`,   sub:`รอดำเนินการ ${orders.filter(o=>o.status==="รอดำเนินการ").length} รายการ`, icon:"📋", color:"#7c3aed", bg:"#f5f3ff"},
     {label:"กำไรสต๊อก",     value:`฿${fmt(profit)}`,           sub:`อัตรา ${((profit/val)*100).toFixed(1)}%`, icon:"📈", color:"#b45309", bg:"#fffbeb"},
   ];
-
   return (
     <div>
       <PageHeader title="ภาพรวมธุรกิจ" subtitle={`ข้อมูล ณ วันที่ ${today()}`}/>
@@ -349,21 +328,15 @@ function Inventory({products, setProducts, canEdit}) {
   const [adjType, setAdjType] = useState("add");
   const [adjNote, setAdjNote] = useState("");
   const [selProd, setSelProd] = useState(null);
-
   const cats = ["ทั้งหมด", ...new Set(products.map(p => p.cat))];
-  const fil = products
-    .filter(p => catFilter === "ทั้งหมด" || p.cat === catFilter)
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
-
+  const fil = products.filter(p => catFilter === "ทั้งหมด" || p.cat === catFilter).filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
   const blankForm = {sku:"",name:"",cat:"",price:"",cost:"",stock:"",min:"",unit:"เครื่อง",emoji:"📦",desc:""};
-
   const save = () => {
     const data = {...form, price:+form.price, cost:+form.cost, stock:+form.stock, min:+form.min};
     if (modal === "add") setProducts(p => [...p, {...data, id:Date.now()}]);
     else setProducts(p => p.map(x => x.id === form.id ? data : x));
     setModal(null);
   };
-
   const applyAdj = () => {
     const qty = parseInt(adjQty);
     setProducts(p => p.map(x => {
@@ -373,27 +346,17 @@ function Inventory({products, setProducts, canEdit}) {
     }));
     setModal(null);
   };
-
   const del = (id) => { if (window.confirm("ยืนยันการลบสินค้ารายการนี้?")) setProducts(p => p.filter(x => x.id !== id)); };
-
   return (
     <div>
-      <PageHeader
-        title="บริหารจัดการสต๊อกสินค้า"
-        subtitle={`สินค้าทั้งหมด ${products.length} รายการ | ใกล้หมด ${products.filter(p=>p.stock<=p.min).length} รายการ`}
-        action={canEdit && <Btn onClick={()=>{setForm(blankForm);setModal("add");}} variant="primary" size="md">+ เพิ่มสินค้าใหม่</Btn>}
-      />
+      <PageHeader title="บริหารจัดการสต๊อกสินค้า" subtitle={`สินค้าทั้งหมด ${products.length} รายการ | ใกล้หมด ${products.filter(p=>p.stock<=p.min).length} รายการ`}
+        action={canEdit && <Btn onClick={()=>{setForm(blankForm);setModal("add");}} variant="primary" size="md">+ เพิ่มสินค้าใหม่</Btn>}/>
       <div style={{display:"flex",gap:"8px",marginBottom:"12px",flexWrap:"wrap",alignItems:"center"}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาชื่อสินค้า หรือ SKU..."
           style={{flex:1,minWidth:"160px",padding:"8px 10px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",outline:"none"}}/>
         {cats.map(c => (
           <button key={c} onClick={()=>setCatFilter(c)}
-            style={{padding:"6px 12px",borderRadius:"6px",fontSize:"12px",fontWeight:600,cursor:"pointer",border:"1px solid",
-              borderColor: catFilter===c ? "#1e3a8a" : "#d1d5db",
-              background: catFilter===c ? "#1e3a8a" : "white",
-              color: catFilter===c ? "white" : "#374151"}}>
-            {c}
-          </button>
+            style={{padding:"6px 12px",borderRadius:"6px",fontSize:"12px",fontWeight:600,cursor:"pointer",border:"1px solid",borderColor:catFilter===c?"#1e3a8a":"#d1d5db",background:catFilter===c?"#1e3a8a":"white",color:catFilter===c?"white":"#374151"}}>{c}</button>
         ))}
       </div>
       <Card>
@@ -429,8 +392,7 @@ function Inventory({products, setProducts, canEdit}) {
                   <td style={{padding:"10px 12px"}}>
                     {p.stock <= p.min
                       ? <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใกล้หมด</span>
-                      : <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ปกติ</span>
-                    }
+                      : <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ปกติ</span>}
                   </td>
                   {canEdit && (
                     <td style={{padding:"10px 12px"}}>
@@ -443,21 +405,16 @@ function Inventory({products, setProducts, canEdit}) {
                   )}
                 </tr>
               ))}
-              {fil.length === 0 && (
-                <tr><td colSpan={canEdit?7:6} style={{padding:"32px",textAlign:"center",fontSize:"13px",color:"#94a3b8"}}>ไม่พบสินค้าที่ค้นหา</td></tr>
-              )}
+              {fil.length === 0 && <tr><td colSpan={canEdit?7:6} style={{padding:"32px",textAlign:"center",fontSize:"13px",color:"#94a3b8"}}>ไม่พบสินค้าที่ค้นหา</td></tr>}
             </tbody>
           </table>
         </div>
       </Card>
-
       {(modal === "add" || modal === "edit") && (
         <Modal title={modal==="add"?"เพิ่มสินค้าใหม่":"แก้ไขข้อมูลสินค้า"} onClose={()=>setModal(null)} wide>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
             {[["รหัสสินค้า (SKU)","sku"],["ชื่อสินค้า","name"],["หมวดหมู่","cat"],["หน่วยนับ","unit"],["ราคาขาย (บาท)","price"],["ต้นทุน (บาท)","cost"],["จำนวนสต๊อก","stock"],["สต๊อกขั้นต่ำ","min"],["ไอคอน (Emoji)","emoji"]].map(([l,k])=>(
-              <FormRow key={k} label={l}>
-                <Input value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} type={["price","cost","stock","min"].includes(k)?"number":"text"}/>
-              </FormRow>
+              <FormRow key={k} label={l}><Input value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} type={["price","cost","stock","min"].includes(k)?"number":"text"}/></FormRow>
             ))}
             <div style={{gridColumn:"1/-1"}}>
               <FormRow label="รายละเอียดสินค้า">
@@ -472,7 +429,6 @@ function Inventory({products, setProducts, canEdit}) {
           </div>
         </Modal>
       )}
-
       {modal === "adjust" && selProd && (
         <Modal title={`ปรับสต๊อก — ${selProd.name}`} onClose={()=>setModal(null)}>
           <div style={{background:"#f8fafc",borderRadius:"6px",padding:"12px",marginBottom:"16px",display:"flex",justifyContent:"space-between"}}>
@@ -486,16 +442,10 @@ function Inventory({products, setProducts, canEdit}) {
               <option value="set">กำหนดจำนวนใหม่</option>
             </Select>
           </FormRow>
-          <FormRow label="จำนวน">
-            <Input type="number" value={adjQty} onChange={e=>setAdjQty(e.target.value)} min="0"/>
-          </FormRow>
-          <FormRow label="หมายเหตุ">
-            <Input value={adjNote} onChange={e=>setAdjNote(e.target.value)} placeholder="เช่น รับสินค้าจาก PO-2568-001"/>
-          </FormRow>
+          <FormRow label="จำนวน"><Input type="number" value={adjQty} onChange={e=>setAdjQty(e.target.value)} min="0"/></FormRow>
+          <FormRow label="หมายเหตุ"><Input value={adjNote} onChange={e=>setAdjNote(e.target.value)} placeholder="เช่น รับสินค้าจาก PO-2568-001"/></FormRow>
           <div style={{background:"#eff6ff",borderRadius:"6px",padding:"10px 12px",marginBottom:"16px",fontSize:"13px",color:"#1e40af"}}>
-            สต๊อกหลังปรับ: <strong>
-              {adjType==="add"?selProd.stock+parseInt(adjQty||0):adjType==="sub"?Math.max(0,selProd.stock-parseInt(adjQty||0)):parseInt(adjQty||0)}
-            </strong> {selProd.unit}
+            สต๊อกหลังปรับ: <strong>{adjType==="add"?selProd.stock+parseInt(adjQty||0):adjType==="sub"?Math.max(0,selProd.stock-parseInt(adjQty||0)):parseInt(adjQty||0)}</strong> {selProd.unit}
           </div>
           <div style={{display:"flex",justifyContent:"flex-end",gap:"8px"}}>
             <Btn onClick={()=>setModal(null)} variant="secondary" size="md">ยกเลิก</Btn>
@@ -513,10 +463,7 @@ function Catalog({products}) {
   const [cat, setCat] = useState("ทั้งหมด");
   const [search, setSearch] = useState("");
   const cats = ["ทั้งหมด", ...new Set(products.map(p => p.cat))];
-  const fil = products
-    .filter(p => cat==="ทั้งหมด" || p.cat===cat)
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-
+  const fil = products.filter(p => cat==="ทั้งหมด" || p.cat===cat).filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
   return (
     <div>
       <PageHeader title="แคตตาล็อกสินค้า" subtitle={`แสดงสินค้าทั้งหมด ${fil.length} รายการ`}/>
@@ -525,10 +472,7 @@ function Catalog({products}) {
           style={{flex:1,minWidth:"160px",padding:"8px 10px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",outline:"none"}}/>
         {cats.map(c=>(
           <button key={c} onClick={()=>setCat(c)}
-            style={{padding:"6px 12px",borderRadius:"6px",fontSize:"12px",fontWeight:600,cursor:"pointer",border:"1px solid",
-              borderColor:cat===c?"#1e3a8a":"#d1d5db",background:cat===c?"#1e3a8a":"white",color:cat===c?"white":"#374151"}}>
-            {c}
-          </button>
+            style={{padding:"6px 12px",borderRadius:"6px",fontSize:"12px",fontWeight:600,cursor:"pointer",border:"1px solid",borderColor:cat===c?"#1e3a8a":"#d1d5db",background:cat===c?"#1e3a8a":"white",color:cat===c?"white":"#374151"}}>{c}</button>
         ))}
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"10px"}}>
@@ -542,8 +486,7 @@ function Catalog({products}) {
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 {p.stock<=p.min
                   ? <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"2px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใกล้หมด</span>
-                  : <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"2px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>พร้อมขาย</span>
-                }
+                  : <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"2px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>พร้อมขาย</span>}
                 <span style={{fontSize:"11px",color:"#94a3b8"}}>คงเหลือ {p.stock} {p.unit}</span>
               </div>
             </div>
@@ -582,60 +525,34 @@ function Orders({products, orders, setOrders, canManage}) {
   const [editForm, setEditForm] = useState({});
   const [form, setForm] = useState({cust:"",phone:"",addr:"",note:"",items:[]});
   const [sp, setSp] = useState(""); const [sq, setSq] = useState("1");
-
   const statuses = ["ทั้งหมด","รอดำเนินการ","รอจัดส่ง","กำลังจัดส่ง","จัดส่งแล้ว"];
   const fil = statusFilter==="ทั้งหมด" ? orders : orders.filter(o=>o.status===statusFilter);
   const total = form.items.reduce((a,i)=>a+i.price*i.qty,0);
-
   const addItem = () => {
-    const p = products.find(p=>p.id===parseInt(sp));
-    if (!p) return;
+    const p = products.find(p=>p.id===parseInt(sp)); if (!p) return;
     setForm(f=>({...f, items:[...f.items.filter(i=>i.pid!==p.id), {pid:p.id,name:p.name,emoji:p.emoji,qty:parseInt(sq)||1,price:p.price}]}));
     setSq("1");
   };
-
   const createOrder = () => {
     if (!form.cust || !form.items.length) return;
-    const newOrd = {
-      id:`ORD-${String(orders.length+1).padStart(3,"0")}`,
-      cust:form.cust, phone:form.phone, addr:form.addr, note:form.note,
-      items:form.items, total, status:"รอดำเนินการ",
-      date:new Date().toLocaleDateString("th-TH",{day:"2-digit",month:"2-digit",year:"numeric"}),
-      driver:null
-    };
-    setOrders(p=>[newOrd,...p]);
-    setForm({cust:"",phone:"",addr:"",note:"",items:[]});
-    setTab("list");
+    const newOrd = { id:`ORD-${String(orders.length+1).padStart(3,"0")}`, cust:form.cust, phone:form.phone, addr:form.addr, note:form.note, items:form.items, total, status:"รอดำเนินการ", date:new Date().toLocaleDateString("th-TH",{day:"2-digit",month:"2-digit",year:"numeric"}), driver:null };
+    setOrders(p=>[newOrd,...p]); setForm({cust:"",phone:"",addr:"",note:"",items:[]}); setTab("list");
   };
-
   const openEdit = (o) => { setEditForm({...o}); setEditModal(o.id); };
-  const saveEdit = () => {
-    setOrders(p=>p.map(o=>o.id===editModal?{...o,...editForm}:o));
-    setEditModal(null);
-  };
+  const saveEdit = () => { setOrders(p=>p.map(o=>o.id===editModal?{...o,...editForm}:o)); setEditModal(null); };
   const upd = (id, s) => setOrders(p=>p.map(o=>o.id===id?{...o,status:s}:o));
   const del = (id) => { if(window.confirm("ยืนยันการลบออเดอร์นี้?")) setOrders(p=>p.filter(o=>o.id!==id)); };
   const NEXT = {"รอดำเนินการ":"รอจัดส่ง","รอจัดส่ง":"กำลังจัดส่ง","กำลังจัดส่ง":"จัดส่งแล้ว"};
-
   return (
     <div>
-      <PageHeader
-        title="ใบสั่งซื้อ / คำสั่งขาย"
-        subtitle={`ทั้งหมด ${orders.length} รายการ`}
-        action={
-          <div style={{display:"flex",gap:"6px"}}>
-            <Btn onClick={()=>setTab("list")} variant={tab==="list"?"primary":"secondary"} size="md">รายการ</Btn>
-            {canManage && <Btn onClick={()=>setTab("create")} variant={tab==="create"?"primary":"secondary"} size="md">+ สร้างใบสั่งซื้อ</Btn>}
-          </div>
-        }
-      />
+      <PageHeader title="ใบสั่งซื้อ / คำสั่งขาย" subtitle={`ทั้งหมด ${orders.length} รายการ`}
+        action={<div style={{display:"flex",gap:"6px"}}><Btn onClick={()=>setTab("list")} variant={tab==="list"?"primary":"secondary"} size="md">รายการ</Btn>{canManage && <Btn onClick={()=>setTab("create")} variant={tab==="create"?"primary":"secondary"} size="md">+ สร้างใบสั่งซื้อ</Btn>}</div>}/>
       {tab === "list" ? (
         <>
           <div style={{display:"flex",gap:"6px",marginBottom:"12px",flexWrap:"wrap"}}>
             {statuses.map(s=>(
               <button key={s} onClick={()=>setStatusFilter(s)}
-                style={{padding:"5px 12px",borderRadius:"6px",fontSize:"12px",fontWeight:600,cursor:"pointer",border:"1px solid",
-                  borderColor:statusFilter===s?"#1e3a8a":"#d1d5db",background:statusFilter===s?"#1e3a8a":"white",color:statusFilter===s?"white":"#374151"}}>
+                style={{padding:"5px 12px",borderRadius:"6px",fontSize:"12px",fontWeight:600,cursor:"pointer",border:"1px solid",borderColor:statusFilter===s?"#1e3a8a":"#d1d5db",background:statusFilter===s?"#1e3a8a":"white",color:statusFilter===s?"white":"#374151"}}>
                 {s} {s!=="ทั้งหมด"&&`(${orders.filter(o=>o.status===s).length})`}
               </button>
             ))}
@@ -670,11 +587,7 @@ function Orders({products, orders, setOrders, canManage}) {
                 {o.driver && <p style={{margin:"0 0 8px",fontSize:"11px",color:"#0f766e"}}>🚚 คนขับ: {o.driver}</p>}
                 <Divider/>
                 <div style={{display:"flex",gap:"6px",marginTop:"10px",flexWrap:"wrap"}}>
-                  {NEXT[o.status] && canManage && (
-                    <Btn onClick={()=>upd(o.id,NEXT[o.status])} variant="primary" size="sm">
-                      {o.status==="รอดำเนินการ"?"✓ อนุมัติ":o.status==="รอจัดส่ง"?"🚚 จัดส่ง":"✓ ส่งสำเร็จ"}
-                    </Btn>
-                  )}
+                  {NEXT[o.status] && canManage && <Btn onClick={()=>upd(o.id,NEXT[o.status])} variant="primary" size="sm">{o.status==="รอดำเนินการ"?"✓ อนุมัติ":o.status==="รอจัดส่ง"?"🚚 จัดส่ง":"✓ ส่งสำเร็จ"}</Btn>}
                   {canManage && <Btn onClick={()=>openEdit(o)} variant="secondary" size="sm">แก้ไขออเดอร์</Btn>}
                   {canManage && o.status==="รอดำเนินการ" && <Btn onClick={()=>del(o.id)} variant="danger" size="sm">ยกเลิก</Btn>}
                 </div>
@@ -750,16 +663,13 @@ function Orders({products, orders, setOrders, canManage}) {
 
 // ─── DELIVERY ──────────────────────────────────────────────────
 function Delivery({orders, setOrders, currentUser}) {
-  const myOrders = currentUser.role==="driver"
-    ? orders.filter(o=>o.driver===currentUser.name||o.status==="กำลังจัดส่ง")
-    : orders;
+  const myOrders = currentUser.role==="driver" ? orders.filter(o=>o.driver===currentUser.name||o.status==="กำลังจัดส่ง") : orders;
   const [sel, setSel] = useState(myOrders[0]||null);
   const [photos, setPhotos] = useState([]);
   const [editNote, setEditNote] = useState(false);
   const [noteVal, setNoteVal] = useState("");
   const fileRef = useRef();
   const steps = ["รอดำเนินการ","รอจัดส่ง","กำลังจัดส่ง","จัดส่งแล้ว"];
-
   const handlePhoto = e => {
     const f = e.target.files[0]; if(!f) return;
     const url = URL.createObjectURL(f);
@@ -767,22 +677,14 @@ function Delivery({orders, setOrders, currentUser}) {
     tryGps(({lat,lng})=>setPhotos(p=>[...p,{url,name:f.name,lat,lng,time:new Date().toLocaleTimeString("th-TH")}]));
     e.target.value="";
   };
-
-  const saveNote = () => {
-    setOrders(p=>p.map(o=>o.id===sel.id?{...o,note:noteVal}:o));
-    setSel(prev=>({...prev,note:noteVal}));
-    setEditNote(false);
-  };
-
+  const saveNote = () => { setOrders(p=>p.map(o=>o.id===sel.id?{...o,note:noteVal}:o)); setSel(prev=>({...prev,note:noteVal})); setEditNote(false); };
   return (
     <div>
       <PageHeader title="ติดตามการจัดส่ง" subtitle={currentUser.role==="driver"?"แสดงเฉพาะออเดอร์ที่รับผิดชอบ":"ออเดอร์ทั้งหมด"}/>
       <div style={{display:"flex",flexDirection:"column",gap:"8px",marginBottom:"14px"}}>
         {myOrders.map(o=>(
           <div key={o.id} onClick={()=>setSel(o)}
-            style={{padding:"12px 14px",borderRadius:"8px",cursor:"pointer",border:"1px solid",transition:"all 0.15s",
-              borderColor:sel?.id===o.id?"#1e3a8a":"#e2e8f0",
-              background:sel?.id===o.id?"#eff6ff":"white"}}>
+            style={{padding:"12px 14px",borderRadius:"8px",cursor:"pointer",border:"1px solid",transition:"all 0.15s",borderColor:sel?.id===o.id?"#1e3a8a":"#e2e8f0",background:sel?.id===o.id?"#eff6ff":"white"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
@@ -805,17 +707,11 @@ function Delivery({orders, setOrders, currentUser}) {
           </div>
           <div style={{display:"flex",alignItems:"center",marginBottom:"16px"}}>
             {steps.map((s,i)=>{
-              const idx = steps.indexOf(sel.status);
-              const done = i<=idx, active = i===idx;
+              const idx = steps.indexOf(sel.status); const done = i<=idx, active = i===idx;
               return (
                 <div key={s} style={{display:"flex",alignItems:"center",flex:1}}>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
-                    <div style={{width:"28px",height:"28px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",fontWeight:700,
-                      background:active?"#1e3a8a":done?"#16a34a":"#f1f5f9",
-                      color:active||done?"white":"#94a3b8",
-                      border:`2px solid ${active?"#1e3a8a":done?"#16a34a":"#e2e8f0"}`}}>
-                      {done&&!active?"✓":i+1}
-                    </div>
+                    <div style={{width:"28px",height:"28px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",fontWeight:700,background:active?"#1e3a8a":done?"#16a34a":"#f1f5f9",color:active||done?"white":"#94a3b8",border:`2px solid ${active?"#1e3a8a":done?"#16a34a":"#e2e8f0"}`}}>{done&&!active?"✓":i+1}</div>
                     <p style={{margin:"3px 0 0",fontSize:"9px",fontWeight:600,color:active?"#1e3a8a":done?"#16a34a":"#94a3b8",textAlign:"center",maxWidth:"44px",lineHeight:1.2}}>{s}</p>
                   </div>
                   {i<steps.length-1 && <div style={{flex:1,height:"2px",margin:"0 2px",marginBottom:"14px",background:i<idx?"#16a34a":"#e2e8f0"}}/>}
@@ -869,41 +765,103 @@ function Delivery({orders, setOrders, currentUser}) {
 
 // ─── AI PAGE ───────────────────────────────────────────────────
 function AIPage({products, orders}) {
-  const [msgs, setMsgs] = useState([{r:"a",t:"สวัสดีครับ ผมคือ AI Assistant ของ StockPro 🤖 ผมสามารถช่วยวิเคราะห์สต๊อก ออเดอร์ และให้คำแนะนำด้านธุรกิจได้ครับ"}]);
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("sp_apikey") || "");
+  const [keyInput, setKeyInput] = useState("");
+  const [showKeySetup, setShowKeySetup] = useState(!localStorage.getItem("sp_apikey"));
+  const [showKeyChange, setShowKeyChange] = useState(false);
+  const [msgs, setMsgs] = useState([{r:"a",t:"สวัสดีครับ ผมคือ AI Assistant ของ StockPro 🤖\nผมสามารถช่วยวิเคราะห์สต๊อก ออเดอร์ และให้คำแนะนำด้านธุรกิจได้ครับ\nพิมพ์คำถามหรือเลือกหัวข้อด้านล่างได้เลยครับ"}]);
   const [inp, setInp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
   const endRef = useRef();
   useEffect(()=>{ endRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
 
+  const saveKey = () => {
+    const k = keyInput.trim();
+    if (!k.startsWith("sk-ant-")) { setErrMsg("API Key ต้องขึ้นต้นด้วย sk-ant-"); return; }
+    localStorage.setItem("sp_apikey", k); setApiKey(k); setKeyInput(""); setErrMsg(""); setShowKeySetup(false); setShowKeyChange(false);
+  };
+  const removeKey = () => { localStorage.removeItem("sp_apikey"); setApiKey(""); setKeyInput(""); setShowKeySetup(true); setShowKeyChange(false); };
+
   const send = async () => {
     if (!inp.trim() || loading) return;
-    const u = inp.trim(); setInp(""); setMsgs(p=>[...p,{r:"u",t:u}]); setLoading(true);
+    const u = inp.trim(); setInp(""); setMsgs(p=>[...p,{r:"u",t:u}]); setLoading(true); setErrMsg("");
     const pl = products.map(p=>`${p.name} ราคา฿${p.price} ต้นทุน฿${p.cost} สต๊อก${p.stock}${p.unit} (ขั้นต่ำ${p.min})`).join("; ");
     const ol = orders.map(o=>`${o.id} ${o.cust} ฿${o.total} ${o.status}`).join("; ");
     try {
-      const rep = await callClaude(
-        msgs.map(m=>({role:m.r==="a"?"assistant":"user",content:m.t})).concat([{role:"user",content:u}]),
-        `คุณเป็น AI Business Assistant ของร้านค้าสินค้าอิเล็กทรอนิกส์ชื่อ StockPro ตอบภาษาไทย กระชับ มืออาชีพ ข้อมูลสินค้า: ${pl} ออเดอร์: ${ol}`
-      );
+      const history = msgs.filter(m=>m.r!=="err").map(m=>({role:m.r==="a"?"assistant":"user",content:m.t}));
+      const rep = await callClaude([...history,{role:"user",content:u}],
+        `คุณเป็น AI Business Assistant ของร้านค้าสินค้าอิเล็กทรอนิกส์ชื่อ StockPro ตอบภาษาไทย กระชับ มืออาชีพ ข้อมูลสินค้าปัจจุบัน: ${pl} ออเดอร์: ${ol}`, apiKey);
       setMsgs(p=>[...p,{r:"a",t:rep}]);
-    } catch { setMsgs(p=>[...p,{r:"a",t:"ขออภัย เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง"}]); }
+    } catch(e) {
+      const msg = e.message.includes("401") ? "API Key ไม่ถูกต้อง กรุณาตรวจสอบ API Key ของคุณ"
+        : e.message.includes("429") ? "ส่งคำถามบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่"
+        : e.message.includes("400") ? "คำถามไม่ถูกต้อง กรุณาลองใหม่"
+        : `เกิดข้อผิดพลาด: ${e.message}`;
+      setErrMsg(msg); setMsgs(p=>[...p,{r:"err",t:`⚠️ ${msg}`}]);
+    }
     setLoading(false);
   };
 
-  const suggestions = ["วิเคราะห์สต๊อกสินค้าที่ใกล้หมด","แนะนำสินค้าที่ควรเพิ่มสต๊อก","สรุปยอดขายและกำไร","วิเคราะห์ออเดอร์ที่รอดำเนินการ"];
+  const suggestions = ["วิเคราะห์สต๊อกสินค้าที่ใกล้หมด","แนะนำสินค้าที่ควรเพิ่มสต๊อก","สรุปยอดขายและกำไรทั้งหมด","วิเคราะห์ออเดอร์ที่รอดำเนินการ"];
+
+  if (showKeySetup) return (
+    <div>
+      <PageHeader title="AI Business Assistant" subtitle="ขับเคลื่อนด้วย Claude AI"/>
+      <Card style={{maxWidth:"480px",margin:"0 auto",padding:"32px"}}>
+        <div style={{textAlign:"center",marginBottom:"24px"}}>
+          <div style={{fontSize:"48px",marginBottom:"12px"}}>🔑</div>
+          <h2 style={{margin:"0 0 6px",fontSize:"16px",fontWeight:700,color:"#0f172a"}}>ตั้งค่า Anthropic API Key</h2>
+          <p style={{margin:0,fontSize:"12px",color:"#64748b",lineHeight:1.6}}>AI Assistant ต้องการ API Key จาก Anthropic<br/>เพื่อใช้งาน Claude AI ในการวิเคราะห์ข้อมูลธุรกิจ</p>
+        </div>
+        <div style={{background:"#eff6ff",border:"1px solid #bfdbfe",borderRadius:"8px",padding:"12px 14px",marginBottom:"20px",fontSize:"12px",color:"#1e40af",lineHeight:1.7}}>
+          <p style={{margin:"0 0 6px",fontWeight:700}}>📋 วิธีรับ API Key:</p>
+          <p style={{margin:0}}>1. ไปที่ <strong>console.anthropic.com</strong><br/>2. สมัครหรือ Login เข้าระบบ<br/>3. ไปที่ Settings → API Keys<br/>4. กด Create Key แล้วคัดลอกมาวาง</p>
+        </div>
+        <FormRow label="Anthropic API Key">
+          <Input value={keyInput} onChange={e=>{setKeyInput(e.target.value);setErrMsg("");}} onKeyDown={e=>e.key==="Enter"&&saveKey()} placeholder="sk-ant-api03-..." type="password" style={{fontFamily:"monospace",fontSize:"12px"}}/>
+        </FormRow>
+        {errMsg && <div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:"6px",padding:"8px 12px",fontSize:"12px",color:"#dc2626",marginBottom:"12px"}}>⚠️ {errMsg}</div>}
+        <Btn onClick={saveKey} variant="primary" size="md" disabled={!keyInput.trim()}>บันทึก API Key และเริ่มใช้งาน →</Btn>
+        <p style={{margin:"16px 0 0",fontSize:"11px",color:"#94a3b8",textAlign:"center"}}>🔒 API Key ถูกเก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น</p>
+      </Card>
+    </div>
+  );
 
   return (
     <div>
-      <PageHeader title="AI Business Assistant" subtitle="ขับเคลื่อนด้วย Claude AI — วิเคราะห์ข้อมูลธุรกิจแบบอัจฉริยะ"/>
-      <Card style={{display:"flex",flexDirection:"column",height:"420px"}}>
+      <PageHeader title="AI Business Assistant" subtitle="ขับเคลื่อนด้วย Claude AI — วิเคราะห์ข้อมูลธุรกิจแบบอัจฉริยะ"
+        action={
+          <div style={{display:"flex",gap:"6px",alignItems:"center"}}>
+            <span style={{fontSize:"11px",color:"#16a34a",background:"#f0fdf4",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontWeight:600}}>✓ เชื่อมต่อแล้ว</span>
+            <Btn onClick={()=>{setKeyInput("");setErrMsg("");setShowKeyChange(v=>!v);}} variant="secondary" size="sm">🔑 เปลี่ยน Key</Btn>
+          </div>
+        }/>
+      {showKeyChange && (
+        <Card style={{padding:"16px",marginBottom:"12px",border:"1px solid #fde68a",background:"#fffbeb"}}>
+          <p style={{margin:"0 0 10px",fontSize:"13px",fontWeight:600,color:"#92400e"}}>🔑 เปลี่ยน API Key</p>
+          <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+            <Input value={keyInput} onChange={e=>{setKeyInput(e.target.value);setErrMsg("");}} onKeyDown={e=>e.key==="Enter"&&saveKey()} placeholder="sk-ant-api03-..." type="password" style={{fontFamily:"monospace",fontSize:"12px"}}/>
+            <Btn onClick={saveKey} variant="primary" size="sm">บันทึก</Btn>
+            <Btn onClick={removeKey} variant="danger" size="sm">ลบ Key</Btn>
+            <Btn onClick={()=>setShowKeyChange(false)} variant="secondary" size="sm">ยกเลิก</Btn>
+          </div>
+          {errMsg && <p style={{margin:"8px 0 0",fontSize:"12px",color:"#dc2626"}}>⚠️ {errMsg}</p>}
+        </Card>
+      )}
+      <Card style={{display:"flex",flexDirection:"column",height:"460px"}}>
         <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"10px"}}>
           {msgs.map((m,i)=>(
             <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start"}}>
-              {m.r==="a" && <div style={{width:"28px",height:"28px",borderRadius:"50%",background:"#1e3a8a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:0,marginRight:"8px",marginTop:"2px"}}>🤖</div>}
-              <div style={{maxWidth:"78%",padding:"10px 14px",borderRadius:m.r==="u"?"12px 12px 4px 12px":"12px 12px 12px 4px",fontSize:"13px",lineHeight:1.6,
-                background:m.r==="u"?"#1e3a8a":"#f8fafc",
-                color:m.r==="u"?"white":"#1e293b",
-                border:m.r==="a"?"1px solid #e2e8f0":"none"}}>
+              {(m.r==="a"||m.r==="err") && (
+                <div style={{width:"28px",height:"28px",borderRadius:"50%",background:m.r==="err"?"#fef2f2":"#1e3a8a",border:m.r==="err"?"1px solid #fecaca":"none",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:0,marginRight:"8px",marginTop:"2px"}}>
+                  {m.r==="err"?"⚠️":"🤖"}
+                </div>
+              )}
+              <div style={{maxWidth:"80%",padding:"10px 14px",borderRadius:m.r==="u"?"12px 12px 4px 12px":"12px 12px 12px 4px",fontSize:"13px",lineHeight:1.7,whiteSpace:"pre-wrap",
+                background:m.r==="u"?"#1e3a8a":m.r==="err"?"#fef2f2":"#f8fafc",
+                color:m.r==="u"?"white":m.r==="err"?"#dc2626":"#1e293b",
+                border:m.r==="a"?"1px solid #e2e8f0":m.r==="err"?"1px solid #fecaca":"none"}}>
                 {m.t}
               </div>
             </div>
@@ -911,7 +869,12 @@ function AIPage({products, orders}) {
           {loading && (
             <div style={{display:"flex",gap:"8px",alignItems:"flex-start"}}>
               <div style={{width:"28px",height:"28px",borderRadius:"50%",background:"#1e3a8a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px"}}>🤖</div>
-              <div style={{padding:"10px 14px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:"12px 12px 12px 4px",fontSize:"13px",color:"#94a3b8"}}>กำลังวิเคราะห์ข้อมูล...</div>
+              <div style={{padding:"10px 14px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:"12px 12px 12px 4px",display:"flex",alignItems:"center",gap:"8px"}}>
+                <span style={{fontSize:"13px",color:"#94a3b8"}}>กำลังวิเคราะห์ข้อมูล</span>
+                <span style={{display:"inline-flex",gap:"3px"}}>
+                  {[0,1,2].map(i=><span key={i} style={{width:"6px",height:"6px",borderRadius:"50%",background:"#94a3b8",display:"inline-block"}}/>)}
+                </span>
+              </div>
             </div>
           )}
           <div ref={endRef}/>
@@ -924,10 +887,11 @@ function AIPage({products, orders}) {
             ))}
           </div>
           <div style={{display:"flex",gap:"8px"}}>
-            <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}
-              placeholder="ถามเกี่ยวกับสต๊อก ออเดอร์ หรือขอคำแนะนำทางธุรกิจ..."
-              style={{flex:1,padding:"9px 12px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",outline:"none"}}/>
-            <Btn onClick={send} disabled={loading} variant="primary" size="md">ส่ง</Btn>
+            <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&send()}
+              placeholder="ถามเกี่ยวกับสต๊อก ออเดอร์ หรือขอคำแนะนำทางธุรกิจ... (Enter เพื่อส่ง)"
+              disabled={loading}
+              style={{flex:1,padding:"9px 12px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",outline:"none",opacity:loading?0.7:1}}/>
+            <Btn onClick={send} disabled={loading||!inp.trim()} variant="primary" size="md">{loading?"...":"ส่ง"}</Btn>
           </div>
         </div>
       </Card>
@@ -943,27 +907,16 @@ function UserMgmt({currentUser}) {
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [search, setSearch] = useState("");
-
   useEffect(() => { localStorage.setItem("sp_users", JSON.stringify(users)); }, [users]);
-
   const blank = {name:"",email:"",password:"",role:"sales",active:true,phone:"",dept:""};
   const fil = users.filter(u=>u.name.includes(search)||u.email.includes(search));
-
-  const save = () => {
-    if (modal==="add") setUsers(p=>[...p,{...form,id:Date.now()}]);
-    else setUsers(p=>p.map(u=>u.id===form.id?form:u));
-    setModal(null);
-  };
+  const save = () => { if (modal==="add") setUsers(p=>[...p,{...form,id:Date.now()}]); else setUsers(p=>p.map(u=>u.id===form.id?form:u)); setModal(null); };
   const toggle = id => setUsers(p=>p.map(u=>u.id===id?{...u,active:!u.active}:u));
   const del = id => { if(window.confirm("ยืนยันการลบบัญชีผู้ใช้?")) setUsers(p=>p.filter(u=>u.id!==id)); };
-
   return (
     <div>
-      <PageHeader
-        title="จัดการบัญชีผู้ใช้งาน"
-        subtitle={`บัญชีทั้งหมด ${users.length} บัญชี | ใช้งานได้ ${users.filter(u=>u.active).length} บัญชี`}
-        action={<Btn onClick={()=>{setForm(blank);setModal("add");}} variant="primary" size="md">+ เพิ่มผู้ใช้ใหม่</Btn>}
-      />
+      <PageHeader title="จัดการบัญชีผู้ใช้งาน" subtitle={`บัญชีทั้งหมด ${users.length} บัญชี | ใช้งานได้ ${users.filter(u=>u.active).length} บัญชี`}
+        action={<Btn onClick={()=>{setForm(blank);setModal("add");}} variant="primary" size="md">+ เพิ่มผู้ใช้ใหม่</Btn>}/>
       <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาชื่อหรืออีเมล..."
         style={{width:"100%",padding:"9px 12px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",marginBottom:"12px",boxSizing:"border-box",outline:"none"}}/>
       <Card>
@@ -982,21 +935,12 @@ function UserMgmt({currentUser}) {
                   <p style={{margin:0,fontSize:"13px",fontWeight:600,color:"#0f172a"}}>{u.name}</p>
                   <p style={{margin:0,fontSize:"11px",color:"#94a3b8",fontFamily:"monospace"}}>{u.email}</p>
                 </td>
-                <td style={{padding:"10px 12px"}}>
-                  <Badge role={u.role}/>
-                  {u.dept && <p style={{margin:"3px 0 0",fontSize:"11px",color:"#64748b"}}>{u.dept}</p>}
-                </td>
+                <td style={{padding:"10px 12px"}}><Badge role={u.role}/>{u.dept && <p style={{margin:"3px 0 0",fontSize:"11px",color:"#64748b"}}>{u.dept}</p>}</td>
                 <td style={{padding:"10px 12px",fontSize:"12px",color:"#475569"}}>{u.phone||"—"}</td>
+                <td style={{padding:"10px 12px"}}><p style={{margin:0,fontSize:"11px",color:"#64748b",lineHeight:1.5}}>{ROLES[u.role]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"สต๊อก",catalog:"แคตตาล็อก",orders:"ออเดอร์",delivery:"จัดส่ง",ai:"AI",users:"ผู้ใช้"}[p]||p)).join(" · ")}</p></td>
                 <td style={{padding:"10px 12px"}}>
-                  <p style={{margin:0,fontSize:"11px",color:"#64748b",lineHeight:1.5}}>
-                    {ROLES[u.role]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"สต๊อก",catalog:"แคตตาล็อก",orders:"ออเดอร์",delivery:"จัดส่ง",ai:"AI",users:"ผู้ใช้"}[p]||p)).join(" · ")}
-                  </p>
-                </td>
-                <td style={{padding:"10px 12px"}}>
-                  {u.active
-                    ? <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใช้งานได้</span>
-                    : <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ระงับแล้ว</span>
-                  }
+                  {u.active ? <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใช้งานได้</span>
+                    : <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ระงับแล้ว</span>}
                 </td>
                 <td style={{padding:"10px 12px"}}>
                   <div style={{display:"flex",gap:"4px"}}>
@@ -1026,9 +970,7 @@ function UserMgmt({currentUser}) {
           </div>
           <div style={{background:"#f8fafc",borderRadius:"6px",padding:"10px 12px",marginBottom:"14px"}}>
             <p style={{margin:"0 0 4px",fontSize:"11px",fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:"0.05em"}}>สิทธิ์การเข้าถึงของตำแหน่งนี้</p>
-            <p style={{margin:0,fontSize:"12px",color:"#374151"}}>
-              {ROLES[form.role||"sales"]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"จัดการสต๊อก",catalog:"แคตตาล็อก",orders:"ใบสั่งซื้อ",delivery:"การจัดส่ง",ai:"AI Assistant",users:"จัดการผู้ใช้"}[p]||p)).join(" · ")}
-            </p>
+            <p style={{margin:0,fontSize:"12px",color:"#374151"}}>{ROLES[form.role||"sales"]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"จัดการสต๊อก",catalog:"แคตตาล็อก",orders:"ใบสั่งซื้อ",delivery:"การจัดส่ง",ai:"AI Assistant",users:"จัดการผู้ใช้"}[p]||p)).join(" · ")}</p>
           </div>
           <label style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"16px",cursor:"pointer"}}>
             <input type="checkbox" checked={form.active||false} onChange={e=>setForm(f=>({...f,active:e.target.checked}))} style={{width:"15px",height:"15px"}}/>
@@ -1056,7 +998,9 @@ const NAV = [
 ];
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sp_session")) || null; } catch { return null; }
+  });
   const [products, setProducts] = useState(() => {
     try { return JSON.parse(localStorage.getItem("sp_products")) || initProducts; } catch { return initProducts; }
   });
@@ -1064,13 +1008,28 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("sp_orders")) || initOrders; } catch { return initOrders; }
   });
   const [sideOpen, setSideOpen] = useState(true);
-  const [page, setPage] = useState(null);
+  const [page, setPage] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem("sp_session"));
+      return s ? (localStorage.getItem("sp_page") || ROLES[s.role]?.pages?.[0] || "dashboard") : null;
+    } catch { return null; }
+  });
 
   useEffect(() => { localStorage.setItem("sp_products", JSON.stringify(products)); }, [products]);
   useEffect(() => { localStorage.setItem("sp_orders", JSON.stringify(orders)); }, [orders]);
+  useEffect(() => { if (page) localStorage.setItem("sp_page", page); }, [page]);
 
-  const handleLogin = u => { setUser(u); setPage(ROLES[u.role]?.pages?.[0]||"dashboard"); };
-  const handleLogout = () => { setUser(null); setPage(null); };
+  const handleLogin = u => {
+    localStorage.setItem("sp_session", JSON.stringify(u));
+    setUser(u);
+    setPage(ROLES[u.role]?.pages?.[0] || "dashboard");
+  };
+  const handleLogout = () => {
+    localStorage.removeItem("sp_session");
+    localStorage.removeItem("sp_page");
+    setUser(null);
+    setPage(null);
+  };
 
   if (!user) return <LoginScreen onLogin={handleLogin}/>;
 
@@ -1082,7 +1041,6 @@ export default function App() {
 
   return (
     <div style={{display:"flex",height:"100vh",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",background:"#f8fafc",fontSize:"14px"}}>
-      {/* Sidebar */}
       <div style={{width:sideOpen?"220px":"56px",background:"#0f172a",display:"flex",flexDirection:"column",flexShrink:0,transition:"width 0.2s",overflow:"hidden"}}>
         <div style={{padding:sideOpen?"16px 14px":"14px",display:"flex",alignItems:"center",gap:"10px",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
           <div style={{width:"28px",height:"28px",background:"#3b82f6",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:0}}>📦</div>
@@ -1100,27 +1058,22 @@ export default function App() {
           {nav.map(n => (
             <button key={n.id} onClick={()=>setPage(n.id)}
               style={{width:"100%",display:"flex",alignItems:"center",gap:"10px",padding:"9px 10px",borderRadius:"7px",border:"none",cursor:"pointer",textAlign:"left",marginBottom:"2px",transition:"background 0.15s",
-                background:page===n.id?"rgba(59,130,246,0.2)":"transparent",
-                color:page===n.id?"#60a5fa":"#94a3b8"}}>
+                background:page===n.id?"rgba(59,130,246,0.2)":"transparent",color:page===n.id?"#60a5fa":"#94a3b8"}}>
               <span style={{fontSize:"15px",flexShrink:0,opacity:page===n.id?1:0.7}}>{n.icon}</span>
               {sideOpen && <span style={{fontSize:"12px",fontWeight:600,whiteSpace:"nowrap"}}>{n.label}</span>}
             </button>
           ))}
         </nav>
         <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
-          <button onClick={handleLogout}
-            style={{width:"100%",padding:"10px",display:"flex",alignItems:"center",justifyContent:sideOpen?"flex-start":"center",gap:"8px",background:"none",border:"none",cursor:"pointer",color:"#64748b"}}>
+          <button onClick={handleLogout} style={{width:"100%",padding:"10px",display:"flex",alignItems:"center",justifyContent:sideOpen?"flex-start":"center",gap:"8px",background:"none",border:"none",cursor:"pointer",color:"#64748b"}}>
             <span style={{fontSize:"14px"}}>🚪</span>
             {sideOpen && <span style={{fontSize:"12px",fontWeight:500}}>ออกจากระบบ</span>}
           </button>
-          <button onClick={()=>setSideOpen(o=>!o)}
-            style={{width:"100%",padding:"8px",background:"none",border:"none",cursor:"pointer",color:"#334155",fontSize:"12px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+          <button onClick={()=>setSideOpen(o=>!o)} style={{width:"100%",padding:"8px",background:"none",border:"none",cursor:"pointer",color:"#334155",fontSize:"12px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
             {sideOpen?"◀ ย่อเมนู":"▶"}
           </button>
         </div>
       </div>
-
-      {/* Main content */}
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
         <div style={{background:"white",borderBottom:"1px solid #e2e8f0",padding:"0 20px",height:"52px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
