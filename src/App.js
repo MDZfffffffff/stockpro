@@ -3,11 +3,11 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
- 
+
 const COLORS = ["#1e40af","#7c3aed","#0f766e","#b45309","#be185d"];
 const fmt = n => Number(n).toLocaleString("th-TH");
 const today = () => new Date().toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"});
- 
+
 const ROLES = {
   admin:    { label:"ผู้ดูแลระบบ",  short:"Admin",      emoji:"👑", pages:["dashboard","inventory","catalog","orders","delivery","ai","users"] },
   manager:  { label:"ผู้จัดการ",    short:"Manager",    emoji:"📊", pages:["dashboard","inventory","catalog","orders","delivery","ai"] },
@@ -15,7 +15,7 @@ const ROLES = {
   sales:    { label:"ฝ่ายขาย",     short:"Sales",      emoji:"💼", pages:["dashboard","catalog","orders","ai"] },
   driver:   { label:"พนักงานขนส่ง",short:"Driver",     emoji:"🚚", pages:["delivery"] },
 };
- 
+
 const ROLE_COLORS = {
   admin:    { bg:"#ede9fe", text:"#4c1d95", border:"#c4b5fd" },
   manager:  { bg:"#dbeafe", text:"#1e3a8a", border:"#93c5fd" },
@@ -23,14 +23,14 @@ const ROLE_COLORS = {
   sales:    { bg:"#fef3c7", text:"#78350f", border:"#fcd34d" },
   driver:   { bg:"#ffedd5", text:"#7c2d12", border:"#fdba74" },
 };
- 
+
 const STATUS_META = {
   "จัดส่งแล้ว":  { bg:"#dcfce7", text:"#14532d", border:"#86efac", dot:"#16a34a" },
   "กำลังจัดส่ง":{ bg:"#dbeafe", text:"#1e3a8a", border:"#93c5fd", dot:"#2563eb" },
   "รอจัดส่ง":   { bg:"#fef9c3", text:"#713f12", border:"#fde047", dot:"#ca8a04" },
   "รอดำเนินการ":{ bg:"#f1f5f9", text:"#475569", border:"#cbd5e1", dot:"#94a3b8" },
 };
- 
+
 const initUsers = [
   { id:1, name:"สมชาย อินทรา",  email:"admin@stockpro.th",     password:"admin1234",   role:"admin",    active:true,  phone:"081-234-5678", dept:"ฝ่ายบริหาร" },
   { id:2, name:"มาลี สุขใจ",     email:"manager@stockpro.th",   password:"manager1234", role:"manager",  active:true,  phone:"082-345-6789", dept:"ฝ่ายจัดการ" },
@@ -38,7 +38,7 @@ const initUsers = [
   { id:4, name:"นภา ขายเก่ง",    email:"sales@stockpro.th",     password:"sales1234",   role:"sales",    active:true,  phone:"084-567-8901", dept:"ฝ่ายขาย" },
   { id:5, name:"สุรชัย ขับดี",   email:"driver@stockpro.th",    password:"driver1234",  role:"driver",   active:true,  phone:"085-678-9012", dept:"ฝ่ายขนส่ง" },
 ];
- 
+
 const initProducts = [
   { id:1, sku:"P001", name:"iPhone 15 Pro",      cat:"โทรศัพท์มือถือ",  price:42900, cost:35000, stock:23, min:5,  unit:"เครื่อง", emoji:"📱", desc:"สมาร์ทโฟน Apple ชิป A17 Pro กล้อง 48MP" },
   { id:2, sku:"P002", name:"AirPods Pro Gen2",   cat:"อุปกรณ์เสียง",    price:8900,  cost:6500,  stock:4,  min:10, unit:"คู่",     emoji:"🎧", desc:"หูฟังไร้สาย ANC พร้อม Spatial Audio" },
@@ -47,20 +47,20 @@ const initProducts = [
   { id:5, sku:"P005", name:"Dyson V15 Detect",   cat:"เครื่องใช้ไฟฟ้า", price:15900, cost:11000, stock:18, min:4,  unit:"เครื่อง", emoji:"🧹", desc:"เครื่องดูดฝุ่นไร้สาย Laser Detection" },
   { id:6, sku:"P006", name:"iPad Air M2",        cat:"แท็บเล็ต",        price:22900, cost:18000, stock:9,  min:5,  unit:"เครื่อง", emoji:"📲", desc:"แท็บเล็ต Apple M2 Wi-Fi + Cellular" },
 ];
- 
+
 const initOrders = [
   { id:"ORD-001", cust:"คุณสมชาย ใจดี",   phone:"091-111-2222", items:[{pid:1,name:"iPhone 15 Pro",emoji:"📱",qty:1,price:42900}],   total:42900,  status:"จัดส่งแล้ว",   date:"24/03/2568", addr:"123 ถ.สุขุมวิท แขวงคลองเตย กทม. 10110",  driver:"สุรชัย ขับดี",   note:"" },
   { id:"ORD-002", cust:"ร้านไอที พลาซ่า", phone:"092-222-3333", items:[{pid:3,name:"MacBook Air M3",emoji:"💻",qty:2,price:45900}],   total:91800,  status:"กำลังจัดส่ง",  date:"24/03/2568", addr:"456 ถ.พระราม 9 แขวงห้วยขวาง กทม. 10310",  driver:"สุรชัย ขับดี",   note:"โทรแจ้งก่อนส่ง" },
   { id:"ORD-003", cust:"คุณมาลี สวยงาม",  phone:"093-333-4444", items:[{pid:2,name:"AirPods Pro",emoji:"🎧",qty:1,price:8900}],       total:8900,   status:"รอจัดส่ง",     date:"24/03/2568", addr:"789 ถ.ลาดพร้าว แขวงลาดพร้าว กทม. 10230",  driver:null,             note:"" },
   { id:"ORD-004", cust:"บริษัท เทคโนฯ",  phone:"094-444-5555", items:[{pid:4,name:"Samsung TV",emoji:"📺",qty:2,price:18500}],        total:37000,  status:"รอดำเนินการ",  date:"23/03/2568", addr:"321 ถ.งามวงศ์วาน อ.เมือง นนทบุรี 11000",  driver:null,             note:"ต้องการใบกำกับภาษี" },
 ];
- 
+
 const salesData = [
   {m:"ต.ค.",s:185000,t:152000},{m:"พ.ย.",s:228000,t:189000},{m:"ธ.ค.",s:315000,t:260000},
   {m:"ม.ค.",s:198000,t:165000},{m:"ก.พ.",s:252000,t:208000},{m:"มี.ค.",s:287000,t:235000},
 ];
 const catData = [{name:"โทรศัพท์",v:35},{name:"คอมพิวเตอร์",v:28},{name:"อุปกรณ์เสียง",v:18},{name:"โทรทัศน์",v:9},{name:"อื่นๆ",v:10}];
- 
+
 async function callClaude(messages, system) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method:"POST",
@@ -70,7 +70,7 @@ async function callClaude(messages, system) {
   const d = await r.json();
   return d.content?.[0]?.text || "ขออภัย เกิดข้อผิดพลาด";
 }
- 
+
 // ─── SHARED UI ─────────────────────────────────────────────────
 const Badge = ({role}) => {
   const c = ROLE_COLORS[role]||{bg:"#f1f5f9",text:"#475569",border:"#cbd5e1"};
@@ -80,7 +80,7 @@ const Badge = ({role}) => {
     </span>
   );
 };
- 
+
 const StatusBadge = ({status}) => {
   const m = STATUS_META[status]||{bg:"#f1f5f9",text:"#475569",border:"#cbd5e1",dot:"#94a3b8"};
   return (
@@ -90,7 +90,7 @@ const StatusBadge = ({status}) => {
     </span>
   );
 };
- 
+
 const Modal = ({title, onClose, children, wide}) => (
   <div style={{position:"fixed",inset:0,background:"rgba(15,23,42,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:"16px"}}>
     <div style={{background:"white",borderRadius:"8px",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",width:"100%",maxWidth:wide?"640px":"460px",maxHeight:"90vh",overflow:"hidden",display:"flex",flexDirection:"column"}}>
@@ -102,22 +102,22 @@ const Modal = ({title, onClose, children, wide}) => (
     </div>
   </div>
 );
- 
+
 const FormRow = ({label, children}) => (
   <div style={{marginBottom:"14px"}}>
     <label style={{display:"block",fontSize:"12px",fontWeight:600,color:"#475569",marginBottom:"5px",textTransform:"uppercase",letterSpacing:"0.05em"}}>{label}</label>
     {children}
   </div>
 );
- 
+
 const Input = (props) => (
   <input {...props} style={{width:"100%",padding:"8px 10px",border:"1px solid #cbd5e1",borderRadius:"6px",fontSize:"13px",color:"#0f172a",boxSizing:"border-box",outline:"none",background:"#f8fafc",...props.style}}/>
 );
- 
+
 const Select = ({value, onChange, children, style}) => (
   <select value={value} onChange={onChange} style={{width:"100%",padding:"8px 10px",border:"1px solid #cbd5e1",borderRadius:"6px",fontSize:"13px",color:"#0f172a",background:"#f8fafc",boxSizing:"border-box",outline:"none",...style}}>{children}</select>
 );
- 
+
 const Btn = ({onClick, children, variant="primary", size="sm", disabled}) => {
   const styles = {
     primary: {background:"#1e3a8a",color:"white",border:"1px solid #1e3a8a"},
@@ -133,7 +133,7 @@ const Btn = ({onClick, children, variant="primary", size="sm", disabled}) => {
     </button>
   );
 };
- 
+
 const PageHeader = ({title, subtitle, action}) => (
   <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:"20px"}}>
     <div>
@@ -143,13 +143,13 @@ const PageHeader = ({title, subtitle, action}) => (
     {action && <div>{action}</div>}
   </div>
 );
- 
+
 const Card = ({children, style}) => (
   <div style={{background:"white",border:"1px solid #e2e8f0",borderRadius:"8px",boxShadow:"0 1px 3px rgba(0,0,0,0.04)",...style}}>{children}</div>
 );
- 
+
 const Divider = () => <hr style={{border:"none",borderTop:"1px solid #f1f5f9",margin:"0"}}/>;
- 
+
 // ─── LOGIN ─────────────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -157,124 +157,132 @@ function LoginScreen({ onLogin }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
- 
+
   const login = () => {
-    if (!email || !pw) { setErr("กรุณากรอกอีเมลและรหัสผ่าน"); return; }
+    if (!email.trim() || !pw.trim()) { setErr("กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน"); return; }
     setLoading(true); setErr("");
     setTimeout(() => {
-      const u = initUsers.find(u => u.email === email && u.password === pw && u.active);
-      if (u) onLogin(u);
-      else setErr("อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือบัญชีถูกระงับ");
+      const u = initUsers.find(u => u.email === email.trim() && u.password === pw && u.active);
+      if (u) { onLogin(u); }
+      else if (initUsers.find(u => u.email === email.trim() && !u.active)) {
+        setErr("บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ");
+      } else {
+        setErr("อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง");
+      }
       setLoading(false);
-    }, 600);
+    }, 800);
   };
- 
-  const demos = [
-    {role:"admin",    email:"admin@stockpro.th",     pw:"admin1234"},
-    {role:"manager",  email:"manager@stockpro.th",   pw:"manager1234"},
-    {role:"warehouse",email:"warehouse@stockpro.th", pw:"ware1234"},
-    {role:"sales",    email:"sales@stockpro.th",     pw:"sales1234"},
-    {role:"driver",   email:"driver@stockpro.th",    pw:"driver1234"},
-  ];
- 
+
   return (
-    <div style={{minHeight:"100vh",background:"#f8fafc",display:"flex",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif"}}>
-      {/* Left panel */}
-      <div style={{display:"none",flex:1,background:"linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%)",padding:"48px",flexDirection:"column",justifyContent:"space-between",...{display:"flex"}}}>
-        <div>
-          <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"48px"}}>
-            <div style={{width:"36px",height:"36px",background:"white",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px"}}>📦</div>
-            <span style={{color:"white",fontWeight:700,fontSize:"18px",letterSpacing:"-0.02em"}}>StockPro</span>
-          </div>
-          <h2 style={{color:"white",fontSize:"28px",fontWeight:700,lineHeight:1.3,marginTop:0}}>ระบบบริหารจัดการ<br/>คลังสินค้าครบวงจร</h2>
-          <p style={{color:"#94a3b8",fontSize:"14px",marginTop:"12px",lineHeight:1.6}}>จัดการสต๊อก ออเดอร์ การจัดส่ง และวิเคราะห์ข้อมูลธุรกิจในที่เดียว</p>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
-          {[["📦","สินค้า","จัดการสต๊อกสินค้า"],["📋","ออเดอร์","ติดตามใบสั่งซื้อ"],["🚚","จัดส่ง","ติดตาม GPS เรียลไทม์"],["🤖","AI","วิเคราะห์ข้อมูลอัจฉริยะ"]].map(([ic,t,s])=>(
-            <div key={t} style={{background:"rgba(255,255,255,0.07)",borderRadius:"8px",padding:"14px"}}>
-              <div style={{fontSize:"20px",marginBottom:"6px"}}>{ic}</div>
-              <p style={{color:"white",fontSize:"13px",fontWeight:600,margin:"0 0 2px"}}>{t}</p>
-              <p style={{color:"#64748b",fontSize:"11px",margin:0}}>{s}</p>
+    <div style={{minHeight:"100vh",background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",padding:"16px"}}>
+      <div style={{display:"flex",width:"100%",maxWidth:"900px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 24px 64px rgba(0,0,0,0.12)"}}>
+
+        {/* Left branding panel */}
+        <div style={{flex:1,background:"linear-gradient(160deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%)",padding:"48px 40px",display:"flex",flexDirection:"column",justifyContent:"space-between",minWidth:0}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"40px"}}>
+              <div style={{width:"40px",height:"40px",background:"rgba(255,255,255,0.15)",borderRadius:"10px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"20px",border:"1px solid rgba(255,255,255,0.2)"}}>📦</div>
+              <div>
+                <p style={{margin:0,color:"white",fontWeight:800,fontSize:"18px",letterSpacing:"-0.03em"}}>StockPro</p>
+                <p style={{margin:0,color:"#93c5fd",fontSize:"11px"}}>Enterprise Edition</p>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
- 
-      {/* Right panel */}
-      <div style={{width:"100%",maxWidth:"420px",display:"flex",flexDirection:"column",justifyContent:"center",padding:"32px",background:"white",boxShadow:"-4px 0 24px rgba(0,0,0,0.06)"}}>
-        <div style={{marginBottom:"32px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"20px"}}>
-            <div style={{width:"32px",height:"32px",background:"#1e3a8a",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px"}}>📦</div>
-            <span style={{fontWeight:700,fontSize:"16px",color:"#0f172a"}}>StockPro</span>
+            <h2 style={{color:"white",fontSize:"26px",fontWeight:700,lineHeight:1.35,margin:"0 0 14px"}}>ระบบบริหารจัดการ<br/>คลังสินค้าครบวงจร</h2>
+            <p style={{color:"#94a3b8",fontSize:"13px",lineHeight:1.7,margin:0}}>จัดการสต๊อกสินค้า ออเดอร์ การจัดส่ง<br/>และวิเคราะห์ข้อมูลธุรกิจด้วย AI ในที่เดียว</p>
           </div>
-          <h1 style={{fontSize:"22px",fontWeight:700,color:"#0f172a",margin:"0 0 6px"}}>เข้าสู่ระบบ</h1>
-          <p style={{fontSize:"13px",color:"#64748b",margin:0}}>กรุณาระบุข้อมูลเพื่อเข้าใช้งาน</p>
-        </div>
- 
-        <div style={{marginBottom:"14px"}}>
-          <label style={{display:"block",fontSize:"12px",fontWeight:600,color:"#475569",marginBottom:"5px",letterSpacing:"0.04em",textTransform:"uppercase"}}>อีเมล</label>
-          <Input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()} placeholder="email@stockpro.th" style={{background:"white",border:"1px solid #d1d5db"}}/>
-        </div>
-        <div style={{marginBottom:"16px"}}>
-          <label style={{display:"block",fontSize:"12px",fontWeight:600,color:"#475569",marginBottom:"5px",letterSpacing:"0.04em",textTransform:"uppercase"}}>รหัสผ่าน</label>
-          <div style={{position:"relative"}}>
-            <Input value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()} type={showPw?"text":"password"} placeholder="••••••••" style={{background:"white",border:"1px solid #d1d5db",paddingRight:"36px"}}/>
-            <button onClick={()=>setShowPw(s=>!s)} style={{position:"absolute",right:"10px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:"13px",color:"#94a3b8"}}>{showPw?"🙈":"👁️"}</button>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginTop:"32px"}}>
+            {[["📦","จัดการสต๊อก","ติดตามสินค้าเรียลไทม์"],["📋","ใบสั่งซื้อ","บริหารออเดอร์ครบวงจร"],["🚚","ระบบจัดส่ง","ติดตามพนักงานขนส่ง"],["🤖","AI Assistant","วิเคราะห์ธุรกิจอัจฉริยะ"]].map(([ic,t,s])=>(
+              <div key={t} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"10px",padding:"12px"}}>
+                <p style={{margin:"0 0 4px",fontSize:"18px"}}>{ic}</p>
+                <p style={{margin:"0 0 2px",color:"white",fontSize:"12px",fontWeight:600}}>{t}</p>
+                <p style={{margin:0,color:"#64748b",fontSize:"10px"}}>{s}</p>
+              </div>
+            ))}
           </div>
         </div>
-        {err && (
-          <div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:"6px",padding:"10px 12px",fontSize:"12px",color:"#dc2626",marginBottom:"14px",display:"flex",gap:"6px",alignItems:"center"}}>
-            <span>⚠️</span>{err}
+
+        {/* Right login panel */}
+        <div style={{width:"380px",flexShrink:0,background:"white",padding:"48px 36px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+          <div style={{marginBottom:"32px"}}>
+            <h1 style={{margin:"0 0 6px",fontSize:"22px",fontWeight:700,color:"#0f172a"}}>เข้าสู่ระบบ</h1>
+            <p style={{margin:0,fontSize:"13px",color:"#64748b"}}>กรุณากรอกข้อมูลประจำตัวเพื่อเข้าใช้งาน</p>
           </div>
-        )}
-        <button onClick={login} disabled={loading}
-          style={{width:"100%",padding:"11px",background:"#1e3a8a",color:"white",border:"none",borderRadius:"6px",fontSize:"14px",fontWeight:600,cursor:loading?"not-allowed":"pointer",opacity:loading?0.75:1,marginBottom:"20px"}}>
-          {loading?"กำลังตรวจสอบข้อมูล...":"เข้าสู่ระบบ"}
-        </button>
- 
-        <div style={{borderTop:"1px solid #f1f5f9",paddingTop:"16px"}}>
-          <p style={{fontSize:"11px",fontWeight:600,color:"#94a3b8",marginBottom:"10px",textTransform:"uppercase",letterSpacing:"0.05em"}}>บัญชีสำหรับทดสอบระบบ</p>
-          <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
-            {demos.map(d => {
-              const c = ROLE_COLORS[d.role];
-              return (
-                <button key={d.role} onClick={()=>{setEmail(d.email);setPw(d.pw);setErr("");}}
-                  style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 12px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:"6px",cursor:"pointer",textAlign:"left",width:"100%",transition:"border-color 0.15s"}}>
-                  <span style={{fontSize:"16px"}}>{ROLES[d.role].emoji}</span>
-                  <div style={{flex:1}}>
-                    <p style={{margin:0,fontSize:"12px",fontWeight:600,color:"#1e293b"}}>{ROLES[d.role].label}</p>
-                    <p style={{margin:0,fontSize:"11px",color:"#94a3b8"}}>{d.email}</p>
-                  </div>
-                  <Badge role={d.role}/>
-                </button>
-              );
-            })}
+
+          <div style={{marginBottom:"16px"}}>
+            <label style={{display:"block",fontSize:"11px",fontWeight:700,color:"#475569",marginBottom:"6px",textTransform:"uppercase",letterSpacing:"0.06em"}}>อีเมลผู้ใช้งาน</label>
+            <input
+              value={email}
+              onChange={e=>{setEmail(e.target.value);setErr("");}}
+              onKeyDown={e=>e.key==="Enter"&&login()}
+              placeholder="กรอกอีเมลของคุณ"
+              autoComplete="username"
+              style={{width:"100%",padding:"10px 12px",border:"1px solid #d1d5db",borderRadius:"8px",fontSize:"14px",color:"#0f172a",boxSizing:"border-box",outline:"none",transition:"border-color 0.15s"}}
+              onFocus={e=>e.target.style.borderColor="#1e3a8a"}
+              onBlur={e=>e.target.style.borderColor="#d1d5db"}
+            />
           </div>
+
+          <div style={{marginBottom:"20px"}}>
+            <label style={{display:"block",fontSize:"11px",fontWeight:700,color:"#475569",marginBottom:"6px",textTransform:"uppercase",letterSpacing:"0.06em"}}>รหัสผ่าน</label>
+            <div style={{position:"relative"}}>
+              <input
+                value={pw}
+                onChange={e=>{setPw(e.target.value);setErr("");}}
+                onKeyDown={e=>e.key==="Enter"&&login()}
+                type={showPw?"text":"password"}
+                placeholder="กรอกรหัสผ่านของคุณ"
+                autoComplete="current-password"
+                style={{width:"100%",padding:"10px 40px 10px 12px",border:"1px solid #d1d5db",borderRadius:"8px",fontSize:"14px",color:"#0f172a",boxSizing:"border-box",outline:"none",transition:"border-color 0.15s"}}
+                onFocus={e=>e.target.style.borderColor="#1e3a8a"}
+                onBlur={e=>e.target.style.borderColor="#d1d5db"}
+              />
+              <button onClick={()=>setShowPw(s=>!s)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#9ca3af",fontSize:"15px",padding:0,lineHeight:1}}>
+                {showPw?"🙈":"👁️"}
+              </button>
+            </div>
+          </div>
+
+          {err && (
+            <div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:"8px",padding:"10px 12px",fontSize:"12px",color:"#dc2626",marginBottom:"16px",display:"flex",gap:"8px",alignItems:"flex-start",lineHeight:1.5}}>
+              <span style={{flexShrink:0,marginTop:"1px"}}>⚠️</span>
+              <span>{err}</span>
+            </div>
+          )}
+
+          <button
+            onClick={login}
+            disabled={loading}
+            style={{width:"100%",padding:"12px",background:loading?"#374151":"#1e3a8a",color:"white",border:"none",borderRadius:"8px",fontSize:"14px",fontWeight:700,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.02em",transition:"background 0.15s"}}
+          >
+            {loading ? "⏳ กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบ →"}
+          </button>
+
+          <p style={{margin:"24px 0 0",fontSize:"11px",color:"#94a3b8",textAlign:"center",lineHeight:1.6}}>
+            หากลืมรหัสผ่านหรือพบปัญหาการเข้าใช้งาน<br/>กรุณาติดต่อผู้ดูแลระบบ
+          </p>
         </div>
       </div>
     </div>
   );
 }
- 
+
 // ─── DASHBOARD ─────────────────────────────────────────────────
 function Dashboard({products, orders}) {
   const low = products.filter(p => p.stock <= p.min);
   const val = products.reduce((a,p) => a + p.price * p.stock, 0);
   const cost = products.reduce((a,p) => a + p.cost * p.stock, 0);
   const profit = val - cost;
- 
+
   const kpis = [
     {label:"สินค้าทั้งหมด",  value:`${products.length} รายการ`, sub:`ใกล้หมด ${low.length} รายการ`, icon:"📦", color:"#1e3a8a", bg:"#eff6ff"},
     {label:"มูลค่าสต๊อก",   value:`฿${fmt(val)}`,              sub:`ต้นทุน ฿${fmt(cost)}`,        icon:"💰", color:"#065f46", bg:"#f0fdf4"},
     {label:"ออเดอร์ทั้งหมด",value:`${orders.length} รายการ`,   sub:`รอดำเนินการ ${orders.filter(o=>o.status==="รอดำเนินการ").length} รายการ`, icon:"📋", color:"#7c3aed", bg:"#f5f3ff"},
     {label:"กำไรสต๊อก",     value:`฿${fmt(profit)}`,           sub:`อัตรา ${((profit/val)*100).toFixed(1)}%`, icon:"📈", color:"#b45309", bg:"#fffbeb"},
   ];
- 
+
   return (
     <div>
       <PageHeader title="ภาพรวมธุรกิจ" subtitle={`ข้อมูล ณ วันที่ ${today()}`}/>
- 
-      {/* KPI cards */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"12px",marginBottom:"16px"}}>
         {kpis.map(k => (
           <Card key={k.label} style={{padding:"16px"}}>
@@ -289,8 +297,6 @@ function Dashboard({products, orders}) {
           </Card>
         ))}
       </div>
- 
-      {/* Sales chart */}
       <Card style={{padding:"16px",marginBottom:"14px"}}>
         <p style={{margin:"0 0 12px",fontSize:"13px",fontWeight:700,color:"#0f172a"}}>ยอดขายเทียบต้นทุน 6 เดือนล่าสุด</p>
         <ResponsiveContainer width="100%" height={160}>
@@ -308,7 +314,6 @@ function Dashboard({products, orders}) {
           </AreaChart>
         </ResponsiveContainer>
       </Card>
- 
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
         <Card style={{padding:"14px"}}>
           <p style={{margin:"0 0 8px",fontSize:"12px",fontWeight:700,color:"#0f172a"}}>สัดส่วนตามหมวดหมู่</p>
@@ -332,32 +337,32 @@ function Dashboard({products, orders}) {
     </div>
   );
 }
- 
+
 // ─── INVENTORY ─────────────────────────────────────────────────
 function Inventory({products, setProducts, canEdit}) {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("ทั้งหมด");
-  const [modal, setModal] = useState(null); // null | "add" | "edit" | "adjust"
+  const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [adjQty, setAdjQty] = useState("0");
   const [adjType, setAdjType] = useState("add");
   const [adjNote, setAdjNote] = useState("");
   const [selProd, setSelProd] = useState(null);
- 
+
   const cats = ["ทั้งหมด", ...new Set(products.map(p => p.cat))];
   const fil = products
     .filter(p => catFilter === "ทั้งหมด" || p.cat === catFilter)
     .filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
- 
+
   const blankForm = {sku:"",name:"",cat:"",price:"",cost:"",stock:"",min:"",unit:"เครื่อง",emoji:"📦",desc:""};
- 
+
   const save = () => {
     const data = {...form, price:+form.price, cost:+form.cost, stock:+form.stock, min:+form.min};
     if (modal === "add") setProducts(p => [...p, {...data, id:Date.now()}]);
     else setProducts(p => p.map(x => x.id === form.id ? data : x));
     setModal(null);
   };
- 
+
   const applyAdj = () => {
     const qty = parseInt(adjQty);
     setProducts(p => p.map(x => {
@@ -367,9 +372,9 @@ function Inventory({products, setProducts, canEdit}) {
     }));
     setModal(null);
   };
- 
+
   const del = (id) => { if (window.confirm("ยืนยันการลบสินค้ารายการนี้?")) setProducts(p => p.filter(x => x.id !== id)); };
- 
+
   return (
     <div>
       <PageHeader
@@ -377,8 +382,6 @@ function Inventory({products, setProducts, canEdit}) {
         subtitle={`สินค้าทั้งหมด ${products.length} รายการ | ใกล้หมด ${products.filter(p=>p.stock<=p.min).length} รายการ`}
         action={canEdit && <Btn onClick={()=>{setForm(blankForm);setModal("add");}} variant="primary" size="md">+ เพิ่มสินค้าใหม่</Btn>}
       />
- 
-      {/* Filters */}
       <div style={{display:"flex",gap:"8px",marginBottom:"12px",flexWrap:"wrap",alignItems:"center"}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาชื่อสินค้า หรือ SKU..."
           style={{flex:1,minWidth:"160px",padding:"8px 10px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",outline:"none"}}/>
@@ -392,8 +395,6 @@ function Inventory({products, setProducts, canEdit}) {
           </button>
         ))}
       </div>
- 
-      {/* Table */}
       <Card>
         <div style={{overflowX:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
@@ -448,8 +449,7 @@ function Inventory({products, setProducts, canEdit}) {
           </table>
         </div>
       </Card>
- 
-      {/* Add/Edit Modal */}
+
       {(modal === "add" || modal === "edit") && (
         <Modal title={modal==="add"?"เพิ่มสินค้าใหม่":"แก้ไขข้อมูลสินค้า"} onClose={()=>setModal(null)} wide>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
@@ -471,8 +471,7 @@ function Inventory({products, setProducts, canEdit}) {
           </div>
         </Modal>
       )}
- 
-      {/* Adjust Stock Modal */}
+
       {modal === "adjust" && selProd && (
         <Modal title={`ปรับสต๊อก — ${selProd.name}`} onClose={()=>setModal(null)}>
           <div style={{background:"#f8fafc",borderRadius:"6px",padding:"12px",marginBottom:"16px",display:"flex",justifyContent:"space-between"}}>
@@ -506,7 +505,7 @@ function Inventory({products, setProducts, canEdit}) {
     </div>
   );
 }
- 
+
 // ─── CATALOG ───────────────────────────────────────────────────
 function Catalog({products}) {
   const [sel, setSel] = useState(null);
@@ -516,7 +515,7 @@ function Catalog({products}) {
   const fil = products
     .filter(p => cat==="ทั้งหมด" || p.cat===cat)
     .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
- 
+
   return (
     <div>
       <PageHeader title="แคตตาล็อกสินค้า" subtitle={`แสดงสินค้าทั้งหมด ${fil.length} รายการ`}/>
@@ -550,7 +549,6 @@ function Catalog({products}) {
           </Card>
         ))}
       </div>
- 
       {sel && (
         <Modal title="รายละเอียดสินค้า" onClose={()=>setSel(null)}>
           <div style={{textAlign:"center",fontSize:"56px",background:"#f8fafc",borderRadius:"8px",padding:"24px",marginBottom:"16px"}}>{sel.emoji}</div>
@@ -574,7 +572,7 @@ function Catalog({products}) {
     </div>
   );
 }
- 
+
 // ─── ORDERS ────────────────────────────────────────────────────
 function Orders({products, orders, setOrders, canManage}) {
   const [tab, setTab] = useState("list");
@@ -583,18 +581,18 @@ function Orders({products, orders, setOrders, canManage}) {
   const [editForm, setEditForm] = useState({});
   const [form, setForm] = useState({cust:"",phone:"",addr:"",note:"",items:[]});
   const [sp, setSp] = useState(""); const [sq, setSq] = useState("1");
- 
+
   const statuses = ["ทั้งหมด","รอดำเนินการ","รอจัดส่ง","กำลังจัดส่ง","จัดส่งแล้ว"];
   const fil = statusFilter==="ทั้งหมด" ? orders : orders.filter(o=>o.status===statusFilter);
   const total = form.items.reduce((a,i)=>a+i.price*i.qty,0);
- 
+
   const addItem = () => {
     const p = products.find(p=>p.id===parseInt(sp));
     if (!p) return;
     setForm(f=>({...f, items:[...f.items.filter(i=>i.pid!==p.id), {pid:p.id,name:p.name,emoji:p.emoji,qty:parseInt(sq)||1,price:p.price}]}));
     setSq("1");
   };
- 
+
   const createOrder = () => {
     if (!form.cust || !form.items.length) return;
     const newOrd = {
@@ -608,7 +606,7 @@ function Orders({products, orders, setOrders, canManage}) {
     setForm({cust:"",phone:"",addr:"",note:"",items:[]});
     setTab("list");
   };
- 
+
   const openEdit = (o) => { setEditForm({...o}); setEditModal(o.id); };
   const saveEdit = () => {
     setOrders(p=>p.map(o=>o.id===editModal?{...o,...editForm}:o));
@@ -616,9 +614,8 @@ function Orders({products, orders, setOrders, canManage}) {
   };
   const upd = (id, s) => setOrders(p=>p.map(o=>o.id===id?{...o,status:s}:o));
   const del = (id) => { if(window.confirm("ยืนยันการลบออเดอร์นี้?")) setOrders(p=>p.filter(o=>o.id!==id)); };
- 
   const NEXT = {"รอดำเนินการ":"รอจัดส่ง","รอจัดส่ง":"กำลังจัดส่ง","กำลังจัดส่ง":"จัดส่งแล้ว"};
- 
+
   return (
     <div>
       <PageHeader
@@ -631,10 +628,8 @@ function Orders({products, orders, setOrders, canManage}) {
           </div>
         }
       />
- 
       {tab === "list" ? (
         <>
-          {/* Status filter */}
           <div style={{display:"flex",gap:"6px",marginBottom:"12px",flexWrap:"wrap"}}>
             {statuses.map(s=>(
               <button key={s} onClick={()=>setStatusFilter(s)}
@@ -644,7 +639,6 @@ function Orders({products, orders, setOrders, canManage}) {
               </button>
             ))}
           </div>
- 
           <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
             {fil.map(o=>(
               <Card key={o.id} style={{padding:"14px"}}>
@@ -662,7 +656,6 @@ function Orders({products, orders, setOrders, canManage}) {
                     <p style={{margin:0,fontSize:"11px",color:"#94a3b8"}}>{o.date}</p>
                   </div>
                 </div>
- 
                 <div style={{background:"#f8fafc",borderRadius:"6px",padding:"10px",marginBottom:"10px"}}>
                   {o.items.map((it,i)=>(
                     <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:"12px",padding:"2px 0"}}>
@@ -671,11 +664,9 @@ function Orders({products, orders, setOrders, canManage}) {
                     </div>
                   ))}
                 </div>
- 
                 {o.addr && <p style={{margin:"0 0 6px",fontSize:"11px",color:"#64748b"}}>📍 {o.addr}</p>}
                 {o.note && <p style={{margin:"0 0 6px",fontSize:"11px",color:"#b45309",background:"#fffbeb",padding:"4px 8px",borderRadius:"4px"}}>💬 {o.note}</p>}
                 {o.driver && <p style={{margin:"0 0 8px",fontSize:"11px",color:"#0f766e"}}>🚚 คนขับ: {o.driver}</p>}
- 
                 <Divider/>
                 <div style={{display:"flex",gap:"6px",marginTop:"10px",flexWrap:"wrap"}}>
                   {NEXT[o.status] && canManage && (
@@ -683,12 +674,8 @@ function Orders({products, orders, setOrders, canManage}) {
                       {o.status==="รอดำเนินการ"?"✓ อนุมัติ":o.status==="รอจัดส่ง"?"🚚 จัดส่ง":"✓ ส่งสำเร็จ"}
                     </Btn>
                   )}
-                  {canManage && (
-                    <Btn onClick={()=>openEdit(o)} variant="secondary" size="sm">แก้ไขออเดอร์</Btn>
-                  )}
-                  {canManage && o.status==="รอดำเนินการ" && (
-                    <Btn onClick={()=>del(o.id)} variant="danger" size="sm">ยกเลิก</Btn>
-                  )}
+                  {canManage && <Btn onClick={()=>openEdit(o)} variant="secondary" size="sm">แก้ไขออเดอร์</Btn>}
+                  {canManage && o.status==="รอดำเนินการ" && <Btn onClick={()=>del(o.id)} variant="danger" size="sm">ยกเลิก</Btn>}
                 </div>
               </Card>
             ))}
@@ -701,14 +688,9 @@ function Orders({products, orders, setOrders, canManage}) {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
             <FormRow label="ชื่อลูกค้า / บริษัท"><Input value={form.cust} onChange={e=>setForm(f=>({...f,cust:e.target.value}))} placeholder="ชื่อลูกค้า หรือ ชื่อบริษัท"/></FormRow>
             <FormRow label="เบอร์โทรศัพท์"><Input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="08X-XXX-XXXX"/></FormRow>
-            <div style={{gridColumn:"1/-1"}}>
-              <FormRow label="ที่อยู่จัดส่ง"><Input value={form.addr} onChange={e=>setForm(f=>({...f,addr:e.target.value}))} placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"/></FormRow>
-            </div>
-            <div style={{gridColumn:"1/-1"}}>
-              <FormRow label="หมายเหตุ"><Input value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))} placeholder="หมายเหตุพิเศษสำหรับคำสั่งนี้"/></FormRow>
-            </div>
+            <div style={{gridColumn:"1/-1"}}><FormRow label="ที่อยู่จัดส่ง"><Input value={form.addr} onChange={e=>setForm(f=>({...f,addr:e.target.value}))} placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"/></FormRow></div>
+            <div style={{gridColumn:"1/-1"}}><FormRow label="หมายเหตุ"><Input value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))} placeholder="หมายเหตุพิเศษสำหรับคำสั่งนี้"/></FormRow></div>
           </div>
- 
           <p style={{fontSize:"12px",fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:"8px"}}>รายการสินค้า</p>
           <div style={{display:"flex",gap:"6px",marginBottom:"10px"}}>
             <Select value={sp} onChange={e=>setSp(e.target.value)} style={{flex:1}}>
@@ -718,7 +700,6 @@ function Orders({products, orders, setOrders, canManage}) {
             <Input type="number" min="1" value={sq} onChange={e=>setSq(e.target.value)} style={{width:"64px",textAlign:"center"}}/>
             <Btn onClick={addItem} variant="secondary" size="sm">เพิ่ม</Btn>
           </div>
- 
           {form.items.length > 0 && (
             <div style={{background:"#f8fafc",borderRadius:"6px",padding:"12px",marginBottom:"14px"}}>
               {form.items.map((it,i)=>(
@@ -742,8 +723,6 @@ function Orders({products, orders, setOrders, canManage}) {
           </div>
         </Card>
       )}
- 
-      {/* Edit Order Modal */}
       {editModal && (
         <Modal title={`แก้ไขออเดอร์ ${editModal}`} onClose={()=>setEditModal(null)} wide>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
@@ -767,7 +746,7 @@ function Orders({products, orders, setOrders, canManage}) {
     </div>
   );
 }
- 
+
 // ─── DELIVERY ──────────────────────────────────────────────────
 function Delivery({orders, setOrders, currentUser}) {
   const myOrders = currentUser.role==="driver"
@@ -779,7 +758,7 @@ function Delivery({orders, setOrders, currentUser}) {
   const [noteVal, setNoteVal] = useState("");
   const fileRef = useRef();
   const steps = ["รอดำเนินการ","รอจัดส่ง","กำลังจัดส่ง","จัดส่งแล้ว"];
- 
+
   const handlePhoto = e => {
     const f = e.target.files[0]; if(!f) return;
     const url = URL.createObjectURL(f);
@@ -787,17 +766,16 @@ function Delivery({orders, setOrders, currentUser}) {
     tryGps(({lat,lng})=>setPhotos(p=>[...p,{url,name:f.name,lat,lng,time:new Date().toLocaleTimeString("th-TH")}]));
     e.target.value="";
   };
- 
+
   const saveNote = () => {
     setOrders(p=>p.map(o=>o.id===sel.id?{...o,note:noteVal}:o));
     setSel(prev=>({...prev,note:noteVal}));
     setEditNote(false);
   };
- 
+
   return (
     <div>
       <PageHeader title="ติดตามการจัดส่ง" subtitle={currentUser.role==="driver"?"แสดงเฉพาะออเดอร์ที่รับผิดชอบ":"ออเดอร์ทั้งหมด"}/>
- 
       <div style={{display:"flex",flexDirection:"column",gap:"8px",marginBottom:"14px"}}>
         {myOrders.map(o=>(
           <div key={o.id} onClick={()=>setSel(o)}
@@ -812,21 +790,18 @@ function Delivery({orders, setOrders, currentUser}) {
                 </div>
                 <p style={{margin:"2px 0 0",fontSize:"12px",color:"#64748b"}}>{o.cust}</p>
               </div>
-              <p style={{margin:0,fontSize:"12px",color:"#94a3b8",fontSize:"11px"}}>{o.date}</p>
+              <p style={{margin:0,fontSize:"11px",color:"#94a3b8"}}>{o.date}</p>
             </div>
             {o.addr && <p style={{margin:"4px 0 0",fontSize:"11px",color:"#64748b"}}>📍 {o.addr.slice(0,45)}...</p>}
           </div>
         ))}
       </div>
- 
       {sel && (
         <Card style={{padding:"16px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
             <p style={{margin:0,fontSize:"14px",fontWeight:700,color:"#0f172a"}}>{sel.id} — สถานะการจัดส่ง</p>
             <StatusBadge status={sel.status}/>
           </div>
- 
-          {/* Progress steps */}
           <div style={{display:"flex",alignItems:"center",marginBottom:"16px"}}>
             {steps.map((s,i)=>{
               const idx = steps.indexOf(sel.status);
@@ -847,7 +822,6 @@ function Delivery({orders, setOrders, currentUser}) {
               );
             })}
           </div>
- 
           <Divider/>
           <div style={{margin:"12px 0"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}}>
@@ -865,7 +839,6 @@ function Delivery({orders, setOrders, currentUser}) {
               </div>
             </div>
           )}
- 
           <Divider/>
           <div style={{marginTop:"12px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}}>
@@ -892,7 +865,7 @@ function Delivery({orders, setOrders, currentUser}) {
     </div>
   );
 }
- 
+
 // ─── AI PAGE ───────────────────────────────────────────────────
 function AIPage({products, orders}) {
   const [msgs, setMsgs] = useState([{r:"a",t:"สวัสดีครับ ผมคือ AI Assistant ของ StockPro 🤖 ผมสามารถช่วยวิเคราะห์สต๊อก ออเดอร์ และให้คำแนะนำด้านธุรกิจได้ครับ"}]);
@@ -900,7 +873,7 @@ function AIPage({products, orders}) {
   const [loading, setLoading] = useState(false);
   const endRef = useRef();
   useEffect(()=>{ endRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
- 
+
   const send = async () => {
     if (!inp.trim() || loading) return;
     const u = inp.trim(); setInp(""); setMsgs(p=>[...p,{r:"u",t:u}]); setLoading(true);
@@ -915,9 +888,9 @@ function AIPage({products, orders}) {
     } catch { setMsgs(p=>[...p,{r:"a",t:"ขออภัย เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง"}]); }
     setLoading(false);
   };
- 
+
   const suggestions = ["วิเคราะห์สต๊อกสินค้าที่ใกล้หมด","แนะนำสินค้าที่ควรเพิ่มสต๊อก","สรุปยอดขายและกำไร","วิเคราะห์ออเดอร์ที่รอดำเนินการ"];
- 
+
   return (
     <div>
       <PageHeader title="AI Business Assistant" subtitle="ขับเคลื่อนด้วย Claude AI — วิเคราะห์ข้อมูลธุรกิจแบบอัจฉริยะ"/>
@@ -960,17 +933,17 @@ function AIPage({products, orders}) {
     </div>
   );
 }
- 
+
 // ─── USER MANAGEMENT ───────────────────────────────────────────
 function UserMgmt({currentUser}) {
   const [users, setUsers] = useState(initUsers);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [search, setSearch] = useState("");
- 
+
   const blank = {name:"",email:"",password:"",role:"sales",active:true,phone:"",dept:""};
   const fil = users.filter(u=>u.name.includes(search)||u.email.includes(search));
- 
+
   const save = () => {
     if (modal==="add") setUsers(p=>[...p,{...form,id:Date.now()}]);
     else setUsers(p=>p.map(u=>u.id===form.id?form:u));
@@ -978,7 +951,7 @@ function UserMgmt({currentUser}) {
   };
   const toggle = id => setUsers(p=>p.map(u=>u.id===id?{...u,active:!u.active}:u));
   const del = id => { if(window.confirm("ยืนยันการลบบัญชีผู้ใช้?")) setUsers(p=>p.filter(u=>u.id!==id)); };
- 
+
   return (
     <div>
       <PageHeader
@@ -986,10 +959,8 @@ function UserMgmt({currentUser}) {
         subtitle={`บัญชีทั้งหมด ${users.length} บัญชี | ใช้งานได้ ${users.filter(u=>u.active).length} บัญชี`}
         action={<Btn onClick={()=>{setForm(blank);setModal("add");}} variant="primary" size="md">+ เพิ่มผู้ใช้ใหม่</Btn>}
       />
- 
       <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาชื่อหรืออีเมล..."
         style={{width:"100%",padding:"9px 12px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",marginBottom:"12px",boxSizing:"border-box",outline:"none"}}/>
- 
       <Card>
         <table style={{width:"100%",borderCollapse:"collapse"}}>
           <thead>
@@ -1003,10 +974,8 @@ function UserMgmt({currentUser}) {
             {fil.map((u,i)=>(
               <tr key={u.id} style={{borderBottom:"1px solid #f1f5f9",background:i%2===0?"white":"#fafafa",opacity:u.active?1:0.55}}>
                 <td style={{padding:"10px 12px"}}>
-                  <div>
-                    <p style={{margin:0,fontSize:"13px",fontWeight:600,color:"#0f172a"}}>{u.name}</p>
-                    <p style={{margin:0,fontSize:"11px",color:"#94a3b8",fontFamily:"monospace"}}>{u.email}</p>
-                  </div>
+                  <p style={{margin:0,fontSize:"13px",fontWeight:600,color:"#0f172a"}}>{u.name}</p>
+                  <p style={{margin:0,fontSize:"11px",color:"#94a3b8",fontFamily:"monospace"}}>{u.email}</p>
                 </td>
                 <td style={{padding:"10px 12px"}}>
                   <Badge role={u.role}/>
@@ -1036,7 +1005,6 @@ function UserMgmt({currentUser}) {
           </tbody>
         </table>
       </Card>
- 
       {modal && (
         <Modal title={modal==="add"?"เพิ่มบัญชีผู้ใช้ใหม่":"แก้ไขข้อมูลผู้ใช้"} onClose={()=>setModal(null)} wide>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
@@ -1070,7 +1038,7 @@ function UserMgmt({currentUser}) {
     </div>
   );
 }
- 
+
 // ─── MAIN APP ──────────────────────────────────────────────────
 const NAV = [
   {id:"dashboard", icon:"📊", label:"ภาพรวม"},
@@ -1081,37 +1049,33 @@ const NAV = [
   {id:"ai",        icon:"🤖", label:"AI Assistant"},
   {id:"users",     icon:"👥", label:"ผู้ใช้งาน"},
 ];
- 
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState(initProducts);
   const [orders, setOrders] = useState(initOrders);
   const [sideOpen, setSideOpen] = useState(true);
   const [page, setPage] = useState(null);
- 
+
   const handleLogin = u => { setUser(u); setPage(ROLES[u.role]?.pages?.[0]||"dashboard"); };
   const handleLogout = () => { setUser(null); setPage(null); };
- 
+
   if (!user) return <LoginScreen onLogin={handleLogin}/>;
- 
+
   const allowed = ROLES[user.role]?.pages || [];
   const nav = NAV.filter(n => allowed.includes(n.id));
   const currentNav = NAV.find(n => n.id === page);
- 
   const canEditInventory = ["admin","manager"].includes(user.role);
   const canManageOrders  = ["admin","manager","sales"].includes(user.role);
- 
+
   return (
     <div style={{display:"flex",height:"100vh",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",background:"#f8fafc",fontSize:"14px"}}>
       {/* Sidebar */}
       <div style={{width:sideOpen?"220px":"56px",background:"#0f172a",display:"flex",flexDirection:"column",flexShrink:0,transition:"width 0.2s",overflow:"hidden"}}>
-        {/* Logo */}
         <div style={{padding:sideOpen?"16px 14px":"14px",display:"flex",alignItems:"center",gap:"10px",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
           <div style={{width:"28px",height:"28px",background:"#3b82f6",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:0}}>📦</div>
           {sideOpen && <span style={{color:"white",fontWeight:700,fontSize:"14px",letterSpacing:"-0.02em",whiteSpace:"nowrap"}}>StockPro</span>}
         </div>
- 
-        {/* User card */}
         {sideOpen && (
           <div style={{margin:"10px 8px",padding:"10px",background:"rgba(255,255,255,0.05)",borderRadius:"8px",flexShrink:0}}>
             <p style={{margin:0,color:"white",fontSize:"12px",fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.name}</p>
@@ -1120,8 +1084,6 @@ export default function App() {
             </div>
           </div>
         )}
- 
-        {/* Nav */}
         <nav style={{flex:1,padding:"6px",overflowY:"auto"}}>
           {nav.map(n => (
             <button key={n.id} onClick={()=>setPage(n.id)}
@@ -1133,8 +1095,6 @@ export default function App() {
             </button>
           ))}
         </nav>
- 
-        {/* Bottom */}
         <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
           <button onClick={handleLogout}
             style={{width:"100%",padding:"10px",display:"flex",alignItems:"center",justifyContent:sideOpen?"flex-start":"center",gap:"8px",background:"none",border:"none",cursor:"pointer",color:"#64748b"}}>
@@ -1147,10 +1107,9 @@ export default function App() {
           </button>
         </div>
       </div>
- 
+
       {/* Main content */}
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        {/* Top bar */}
         <div style={{background:"white",borderBottom:"1px solid #e2e8f0",padding:"0 20px",height:"52px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
             <span style={{fontSize:"12px",color:"#94a3b8"}}>StockPro</span>
@@ -1165,8 +1124,6 @@ export default function App() {
             </div>
           </div>
         </div>
- 
-        {/* Page */}
         <div style={{flex:1,overflowY:"auto",padding:"20px"}}>
           <div style={{maxWidth:"860px",margin:"0 auto"}}>
             {page==="dashboard" && <Dashboard products={products} orders={orders}/>}
