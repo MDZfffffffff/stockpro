@@ -162,9 +162,10 @@ function LoginScreen({ onLogin }) {
     if (!email.trim() || !pw.trim()) { setErr("กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน"); return; }
     setLoading(true); setErr("");
     setTimeout(() => {
-      const u = initUsers.find(u => u.email === email.trim() && u.password === pw && u.active);
+      const stored = (() => { try { return JSON.parse(localStorage.getItem("sp_users")) || initUsers; } catch { return initUsers; } })();
+      const u = stored.find(u => u.email === email.trim() && u.password === pw && u.active);
       if (u) { onLogin(u); }
-      else if (initUsers.find(u => u.email === email.trim() && !u.active)) {
+      else if (stored.find(u => u.email === email.trim() && !u.active)) {
         setErr("บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ");
       } else {
         setErr("อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง");
@@ -936,10 +937,14 @@ function AIPage({products, orders}) {
 
 // ─── USER MANAGEMENT ───────────────────────────────────────────
 function UserMgmt({currentUser}) {
-  const [users, setUsers] = useState(initUsers);
+  const [users, setUsers] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sp_users")) || initUsers; } catch { return initUsers; }
+  });
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [search, setSearch] = useState("");
+
+  useEffect(() => { localStorage.setItem("sp_users", JSON.stringify(users)); }, [users]);
 
   const blank = {name:"",email:"",password:"",role:"sales",active:true,phone:"",dept:""};
   const fil = users.filter(u=>u.name.includes(search)||u.email.includes(search));
@@ -1052,10 +1057,17 @@ const NAV = [
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [products, setProducts] = useState(initProducts);
-  const [orders, setOrders] = useState(initOrders);
+  const [products, setProducts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sp_products")) || initProducts; } catch { return initProducts; }
+  });
+  const [orders, setOrders] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sp_orders")) || initOrders; } catch { return initOrders; }
+  });
   const [sideOpen, setSideOpen] = useState(true);
   const [page, setPage] = useState(null);
+
+  useEffect(() => { localStorage.setItem("sp_products", JSON.stringify(products)); }, [products]);
+  useEffect(() => { localStorage.setItem("sp_orders", JSON.stringify(orders)); }, [orders]);
 
   const handleLogin = u => { setUser(u); setPage(ROLES[u.role]?.pages?.[0]||"dashboard"); };
   const handleLogout = () => { setUser(null); setPage(null); };
