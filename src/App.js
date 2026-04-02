@@ -697,6 +697,13 @@ function Delivery({orders, setOrders, currentUser}) {
   const [noteVal, setNoteVal] = useState("");
   const fileRef = useRef();
   const steps = ["รอดำเนินการ","รอจัดส่ง","กำลังจัดส่ง","จัดส่งแล้ว"];
+  const NEXT_STATUS = {"รอจัดส่ง":"กำลังจัดส่ง","กำลังจัดส่ง":"จัดส่งแล้ว"};
+  const advanceStatus = () => {
+    const next = NEXT_STATUS[sel.status];
+    if (!next) return;
+    setOrders(p=>p.map(o=>o.id===sel.id?{...o,status:next}:o));
+    setSel(prev=>({...prev,status:next}));
+  };
   const handlePhoto = e => {
     const f = e.target.files[0]; if(!f) return;
     const url = URL.createObjectURL(f);
@@ -746,6 +753,13 @@ function Delivery({orders, setOrders, currentUser}) {
               );
             })}
           </div>
+          {currentUser.role==="driver" && NEXT_STATUS[sel.status] && (
+            <div style={{marginBottom:"14px"}}>
+              <Btn onClick={advanceStatus} variant="primary" size="md" style={{width:"100%",justifyContent:"center",fontSize:"15px",padding:"12px"}}>
+                {sel.status==="รอจัดส่ง"?"🚚 เริ่มจัดส่ง":"✅ ยืนยันส่งสำเร็จ"}
+              </Btn>
+            </div>
+          )}
           <Divider/>
           <div style={{margin:"12px 0"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}}>
@@ -1173,4 +1187,3 @@ export default function App() {
     </div>
   );
 }
-
