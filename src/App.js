@@ -8,6 +8,16 @@ const COLORS = ["#1e40af","#7c3aed","#0f766e","#b45309","#be185d"];
 const fmt = n => Number(n).toLocaleString("th-TH");
 const today = () => new Date().toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"});
 
+function useWindowWidth() {
+  const [w, setW] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return w;
+}
+
 const ROLES = {
   admin:    { label:"ผู้ดูแลระบบ",  short:"Admin",      emoji:"👑", pages:["dashboard","inventory","catalog","orders","delivery","ai","users"] },
   manager:  { label:"ผู้จัดการ",    short:"Manager",    emoji:"📊", pages:["dashboard","inventory","catalog","orders","delivery","ai"] },
@@ -100,17 +110,20 @@ const StatusBadge = ({status}) => {
   );
 };
 
-const Modal = ({title, onClose, children, wide}) => (
-  <div style={{position:"fixed",inset:0,background:"rgba(15,23,42,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:"16px"}}>
-    <div style={{background:"white",borderRadius:"8px",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",width:"100%",maxWidth:wide?"640px":"460px",maxHeight:"90vh",overflow:"hidden",display:"flex",flexDirection:"column"}}>
-      <div style={{padding:"18px 24px",borderBottom:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-        <h2 style={{margin:0,fontSize:"15px",fontWeight:700,color:"#0f172a"}}>{title}</h2>
-        <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",fontSize:"20px",lineHeight:1,padding:"2px"}}>×</button>
+const Modal = ({title, onClose, children, wide}) => {
+  const w = useWindowWidth(); const isMob = w < 640;
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(15,23,42,0.5)",display:"flex",alignItems:isMob?"flex-end":"center",justifyContent:"center",zIndex:1000,padding:isMob?"0":"16px"}}>
+      <div style={{background:"white",borderRadius:isMob?"16px 16px 0 0":"8px",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",width:"100%",maxWidth:isMob?"100%":wide?"640px":"460px",maxHeight:isMob?"92vh":"90vh",overflow:"hidden",display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"16px 20px",borderBottom:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+          <h2 style={{margin:0,fontSize:"15px",fontWeight:700,color:"#0f172a"}}>{title}</h2>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",fontSize:"22px",lineHeight:1,padding:"4px 8px"}}>×</button>
+        </div>
+        <div style={{padding:"16px 20px",overflowY:"auto",flex:1}}>{children}</div>
       </div>
-      <div style={{padding:"20px 24px",overflowY:"auto",flex:1}}>{children}</div>
     </div>
-  </div>
-);
+  );
+};
 
 const FormRow = ({label, children}) => (
   <div style={{marginBottom:"14px"}}>
@@ -143,15 +156,18 @@ const Btn = ({onClick, children, variant="primary", size="sm", disabled}) => {
   );
 };
 
-const PageHeader = ({title, subtitle, action}) => (
-  <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:"20px"}}>
-    <div>
-      <h1 style={{margin:0,fontSize:"18px",fontWeight:700,color:"#0f172a"}}>{title}</h1>
-      {subtitle && <p style={{margin:"3px 0 0",fontSize:"12px",color:"#64748b"}}>{subtitle}</p>}
+const PageHeader = ({title, subtitle, action}) => {
+  const w = useWindowWidth(); const isMob = w < 640;
+  return (
+    <div style={{display:"flex",flexDirection:isMob&&action?"column":"row",alignItems:isMob?"flex-start":"flex-start",justifyContent:"space-between",marginBottom:"16px",gap:isMob?"8px":"0"}}>
+      <div>
+        <h1 style={{margin:0,fontSize:isMob?"16px":"18px",fontWeight:700,color:"#0f172a"}}>{title}</h1>
+        {subtitle && <p style={{margin:"3px 0 0",fontSize:"11px",color:"#64748b"}}>{subtitle}</p>}
+      </div>
+      {action && <div>{action}</div>}
     </div>
-    {action && <div>{action}</div>}
-  </div>
-);
+  );
+};
 
 const Card = ({children, style}) => (
   <div style={{background:"white",border:"1px solid #e2e8f0",borderRadius:"8px",boxShadow:"0 1px 3px rgba(0,0,0,0.04)",...style}}>{children}</div>
@@ -166,6 +182,7 @@ function LoginScreen({ onLogin }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const winW = useWindowWidth(); const isMob = winW < 640;
 
   const login = () => {
     if (!email.trim() || !pw.trim()) { setErr("กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน"); return; }
@@ -184,9 +201,9 @@ function LoginScreen({ onLogin }) {
   };
 
   return (
-    <div style={{minHeight:"100vh",background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",padding:"16px"}}>
-      <div style={{display:"flex",width:"100%",maxWidth:"900px",borderRadius:"16px",overflow:"hidden",boxShadow:"0 24px 64px rgba(0,0,0,0.12)"}}>
-        <div style={{flex:1,background:"linear-gradient(160deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%)",padding:"48px 40px",display:"flex",flexDirection:"column",justifyContent:"space-between",minWidth:0}}>
+    <div style={{minHeight:"100vh",background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",padding:isMob?"0":"16px"}}>
+      <div style={{display:"flex",width:"100%",maxWidth:"900px",borderRadius:isMob?"0":"16px",overflow:"hidden",boxShadow:isMob?"none":"0 24px 64px rgba(0,0,0,0.12)",minHeight:isMob?"100vh":"auto"}}>
+        <div style={{flex:1,background:"linear-gradient(160deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%)",padding:"48px 40px",display:isMob?"none":"flex",flexDirection:"column",justifyContent:"space-between",minWidth:0}}>
           <div>
             <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"40px"}}>
               <div style={{width:"40px",height:"40px",background:"rgba(255,255,255,0.15)",borderRadius:"10px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"20px",border:"1px solid rgba(255,255,255,0.2)"}}>📦</div>
@@ -208,7 +225,16 @@ function LoginScreen({ onLogin }) {
             ))}
           </div>
         </div>
-        <div style={{width:"380px",flexShrink:0,background:"white",padding:"48px 36px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+        <div style={{width:isMob?"100%":"380px",flexShrink:0,background:"white",padding:isMob?"40px 24px":"48px 36px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+          {isMob && (
+            <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"32px"}}>
+              <div style={{width:"36px",height:"36px",background:"#1e3a8a",borderRadius:"8px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px"}}>📦</div>
+              <div>
+                <p style={{margin:0,fontWeight:800,fontSize:"16px",color:"#0f172a",letterSpacing:"-0.02em"}}>StockPro</p>
+                <p style={{margin:0,fontSize:"11px",color:"#64748b"}}>Enterprise Edition</p>
+              </div>
+            </div>
+          )}
           <div style={{marginBottom:"32px"}}>
             <h1 style={{margin:"0 0 6px",fontSize:"22px",fontWeight:700,color:"#0f172a"}}>เข้าสู่ระบบ</h1>
             <p style={{margin:0,fontSize:"13px",color:"#64748b"}}>กรุณากรอกข้อมูลประจำตัวเพื่อเข้าใช้งาน</p>
@@ -250,6 +276,7 @@ function LoginScreen({ onLogin }) {
 
 // ─── DASHBOARD ─────────────────────────────────────────────────
 function Dashboard({products, orders}) {
+  const winW = useWindowWidth(); const isMob = winW < 640;
   const low = products.filter(p => p.stock <= p.min);
   const val = products.reduce((a,p) => a + p.price * p.stock, 0);
   const cost = products.reduce((a,p) => a + p.cost * p.stock, 0);
@@ -263,7 +290,7 @@ function Dashboard({products, orders}) {
   return (
     <div>
       <PageHeader title="ภาพรวมธุรกิจ" subtitle={`ข้อมูล ณ วันที่ ${today()}`}/>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"12px",marginBottom:"16px"}}>
+      <div style={{display:"grid",gridTemplateColumns:isMob?"1fr":"repeat(2,1fr)",gap:"10px",marginBottom:"14px"}}>
         {kpis.map(k => (
           <Card key={k.label} style={{padding:"16px"}}>
             <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
@@ -294,7 +321,7 @@ function Dashboard({products, orders}) {
           </AreaChart>
         </ResponsiveContainer>
       </Card>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+      <div style={{display:"grid",gridTemplateColumns:isMob?"1fr":"1fr 1fr",gap:"12px"}}>
         <Card style={{padding:"14px"}}>
           <p style={{margin:"0 0 8px",fontSize:"12px",fontWeight:700,color:"#0f172a"}}>สัดส่วนตามหมวดหมู่</p>
           <ResponsiveContainer width="100%" height={100}><PieChart><Pie data={catData} dataKey="v" cx="50%" cy="50%" outerRadius={42} innerRadius={22}>{catData.map((_,i)=><Cell key={i} fill={COLORS[i%5]}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer>
@@ -412,7 +439,7 @@ function Inventory({products, setProducts, canEdit}) {
       </Card>
       {(modal === "add" || modal === "edit") && (
         <Modal title={modal==="add"?"เพิ่มสินค้าใหม่":"แก้ไขข้อมูลสินค้า"} onClose={()=>setModal(null)} wide>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr",gap:"0"}}>
             {[["รหัสสินค้า (SKU)","sku"],["ชื่อสินค้า","name"],["หมวดหมู่","cat"],["หน่วยนับ","unit"],["ราคาขาย (บาท)","price"],["ต้นทุน (บาท)","cost"],["จำนวนสต๊อก","stock"],["สต๊อกขั้นต่ำ","min"],["ไอคอน (Emoji)","emoji"]].map(([l,k])=>(
               <FormRow key={k} label={l}><Input value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} type={["price","cost","stock","min"].includes(k)?"number":"text"}/></FormRow>
             ))}
@@ -599,7 +626,7 @@ function Orders({products, orders, setOrders, canManage}) {
       ) : (
         <Card style={{padding:"20px"}}>
           <p style={{margin:"0 0 16px",fontSize:"14px",fontWeight:700,color:"#0f172a"}}>สร้างใบสั่งซื้อใหม่</p>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr",gap:"0"}}>
             <FormRow label="ชื่อลูกค้า / บริษัท"><Input value={form.cust} onChange={e=>setForm(f=>({...f,cust:e.target.value}))} placeholder="ชื่อลูกค้า หรือ ชื่อบริษัท"/></FormRow>
             <FormRow label="เบอร์โทรศัพท์"><Input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="08X-XXX-XXXX"/></FormRow>
             <div style={{gridColumn:"1/-1"}}><FormRow label="ที่อยู่จัดส่ง"><Input value={form.addr} onChange={e=>setForm(f=>({...f,addr:e.target.value}))} placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"/></FormRow></div>
@@ -639,7 +666,7 @@ function Orders({products, orders, setOrders, canManage}) {
       )}
       {editModal && (
         <Modal title={`แก้ไขออเดอร์ ${editModal}`} onClose={()=>setEditModal(null)} wide>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr",gap:"0"}}>
             <FormRow label="ชื่อลูกค้า"><Input value={editForm.cust||""} onChange={e=>setEditForm(f=>({...f,cust:e.target.value}))}/></FormRow>
             <FormRow label="เบอร์โทรศัพท์"><Input value={editForm.phone||""} onChange={e=>setEditForm(f=>({...f,phone:e.target.value}))}/></FormRow>
             <div style={{gridColumn:"1/-1"}}><FormRow label="ที่อยู่จัดส่ง"><Input value={editForm.addr||""} onChange={e=>setEditForm(f=>({...f,addr:e.target.value}))}/></FormRow></div>
@@ -920,43 +947,45 @@ function UserMgmt({currentUser}) {
       <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาชื่อหรืออีเมล..."
         style={{width:"100%",padding:"9px 12px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",marginBottom:"12px",boxSizing:"border-box",outline:"none"}}/>
       <Card>
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
-          <thead>
-            <tr style={{background:"#f8fafc",borderBottom:"2px solid #e2e8f0"}}>
-              {["ผู้ใช้งาน","ตำแหน่ง / ฝ่าย","เบอร์โทร","สิทธิ์การเข้าถึง","สถานะ","จัดการ"].map(h=>(
-                <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:"11px",fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap"}}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {fil.map((u,i)=>(
-              <tr key={u.id} style={{borderBottom:"1px solid #f1f5f9",background:i%2===0?"white":"#fafafa",opacity:u.active?1:0.55}}>
-                <td style={{padding:"10px 12px"}}>
-                  <p style={{margin:0,fontSize:"13px",fontWeight:600,color:"#0f172a"}}>{u.name}</p>
-                  <p style={{margin:0,fontSize:"11px",color:"#94a3b8",fontFamily:"monospace"}}>{u.email}</p>
-                </td>
-                <td style={{padding:"10px 12px"}}><Badge role={u.role}/>{u.dept && <p style={{margin:"3px 0 0",fontSize:"11px",color:"#64748b"}}>{u.dept}</p>}</td>
-                <td style={{padding:"10px 12px",fontSize:"12px",color:"#475569"}}>{u.phone||"—"}</td>
-                <td style={{padding:"10px 12px"}}><p style={{margin:0,fontSize:"11px",color:"#64748b",lineHeight:1.5}}>{ROLES[u.role]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"สต๊อก",catalog:"แคตตาล็อก",orders:"ออเดอร์",delivery:"จัดส่ง",ai:"AI",users:"ผู้ใช้"}[p]||p)).join(" · ")}</p></td>
-                <td style={{padding:"10px 12px"}}>
-                  {u.active ? <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใช้งานได้</span>
-                    : <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ระงับแล้ว</span>}
-                </td>
-                <td style={{padding:"10px 12px"}}>
-                  <div style={{display:"flex",gap:"4px"}}>
-                    <Btn onClick={()=>toggle(u.id)} variant={u.active?"danger":"success"} size="sm">{u.active?"ระงับ":"เปิดใช้"}</Btn>
-                    {u.id !== currentUser.id && <Btn onClick={()=>{setForm({...u});setModal("edit");}} variant="secondary" size="sm">แก้ไข</Btn>}
-                    {u.id !== currentUser.id && <Btn onClick={()=>del(u.id)} variant="danger" size="sm">ลบ</Btn>}
-                  </div>
-                </td>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead>
+              <tr style={{background:"#f8fafc",borderBottom:"2px solid #e2e8f0"}}>
+                {["ผู้ใช้งาน","ตำแหน่ง / ฝ่าย","เบอร์โทร","สิทธิ์การเข้าถึง","สถานะ","จัดการ"].map(h=>(
+                  <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:"11px",fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap"}}>{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {fil.map((u,i)=>(
+                <tr key={u.id} style={{borderBottom:"1px solid #f1f5f9",background:i%2===0?"white":"#fafafa",opacity:u.active?1:0.55}}>
+                  <td style={{padding:"10px 12px"}}>
+                    <p style={{margin:0,fontSize:"13px",fontWeight:600,color:"#0f172a"}}>{u.name}</p>
+                    <p style={{margin:0,fontSize:"11px",color:"#94a3b8",fontFamily:"monospace"}}>{u.email}</p>
+                  </td>
+                  <td style={{padding:"10px 12px"}}><Badge role={u.role}/>{u.dept && <p style={{margin:"3px 0 0",fontSize:"11px",color:"#64748b"}}>{u.dept}</p>}</td>
+                  <td style={{padding:"10px 12px",fontSize:"12px",color:"#475569"}}>{u.phone||"—"}</td>
+                  <td style={{padding:"10px 12px"}}><p style={{margin:0,fontSize:"11px",color:"#64748b",lineHeight:1.5}}>{ROLES[u.role]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"สต๊อก",catalog:"แคตตาล็อก",orders:"ออเดอร์",delivery:"จัดส่ง",ai:"AI",users:"ผู้ใช้"}[p]||p)).join(" · ")}</p></td>
+                  <td style={{padding:"10px 12px"}}>
+                    {u.active ? <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใช้งานได้</span>
+                      : <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ระงับแล้ว</span>}
+                  </td>
+                  <td style={{padding:"10px 12px"}}>
+                    <div style={{display:"flex",gap:"4px"}}>
+                      <Btn onClick={()=>toggle(u.id)} variant={u.active?"danger":"success"} size="sm">{u.active?"ระงับ":"เปิดใช้"}</Btn>
+                      {u.id !== currentUser.id && <Btn onClick={()=>{setForm({...u});setModal("edit");}} variant="secondary" size="sm">แก้ไข</Btn>}
+                      {u.id !== currentUser.id && <Btn onClick={()=>del(u.id)} variant="danger" size="sm">ลบ</Btn>}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
       {modal && (
         <Modal title={modal==="add"?"เพิ่มบัญชีผู้ใช้ใหม่":"แก้ไขข้อมูลผู้ใช้"} onClose={()=>setModal(null)} wide>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 16px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr",gap:"0"}}>
             <FormRow label="ชื่อ-นามสกุล"><Input value={form.name||""} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></FormRow>
             <FormRow label="อีเมล"><Input value={form.email||""} onChange={e=>setForm(f=>({...f,email:e.target.value}))} type="email"/></FormRow>
             <FormRow label="รหัสผ่าน"><Input value={form.password||""} onChange={e=>setForm(f=>({...f,password:e.target.value}))} type="password"/></FormRow>
@@ -998,6 +1027,7 @@ const NAV = [
 ];
 
 export default function App() {
+  const winW = useWindowWidth(); const isMob = winW < 640;
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem("sp_session")) || null; } catch { return null; }
   });
@@ -1038,6 +1068,46 @@ export default function App() {
   const currentNav = NAV.find(n => n.id === page);
   const canEditInventory = ["admin","manager"].includes(user.role);
   const canManageOrders  = ["admin","manager","sales"].includes(user.role);
+
+  if (isMob) return (
+    <div style={{display:"flex",flexDirection:"column",height:"100vh",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",background:"#f8fafc",fontSize:"14px"}}>
+      {/* Mobile top header */}
+      <div style={{background:"#0f172a",padding:"0 16px",height:"48px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+          <div style={{width:"26px",height:"26px",background:"#3b82f6",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px"}}>📦</div>
+          <span style={{color:"white",fontWeight:700,fontSize:"14px"}}>{currentNav?.icon} {currentNav?.label||"StockPro"}</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+          <span style={{fontSize:"13px"}}>{ROLES[user.role]?.emoji}</span>
+          <span style={{fontSize:"12px",fontWeight:600,color:"#94a3b8"}}>{user.name.split(" ")[0]}</span>
+          <button onClick={handleLogout} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"#94a3b8",fontSize:"12px",padding:"4px 8px",cursor:"pointer"}}>ออก</button>
+        </div>
+      </div>
+      {/* Main content */}
+      <div style={{flex:1,overflowY:"auto",padding:"14px 12px",paddingBottom:"70px"}}>
+        <div style={{maxWidth:"860px",margin:"0 auto"}}>
+          {page==="dashboard" && <Dashboard products={products} orders={orders}/>}
+          {page==="inventory" && <Inventory products={products} setProducts={setProducts} canEdit={canEditInventory}/>}
+          {page==="catalog"   && <Catalog products={products}/>}
+          {page==="orders"    && <Orders products={products} orders={orders} setOrders={setOrders} canManage={canManageOrders}/>}
+          {page==="delivery"  && <Delivery orders={orders} setOrders={setOrders} currentUser={user}/>}
+          {page==="ai"        && <AIPage products={products} orders={orders}/>}
+          {page==="users"     && user.role==="admin" && <UserMgmt currentUser={user}/>}
+        </div>
+      </div>
+      {/* Bottom navigation */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"white",borderTop:"1px solid #e2e8f0",display:"flex",zIndex:100,boxShadow:"0 -4px 12px rgba(0,0,0,0.06)"}}>
+        {nav.map(n => (
+          <button key={n.id} onClick={()=>setPage(n.id)}
+            style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 2px",border:"none",background:"none",cursor:"pointer",
+              color:page===n.id?"#1e3a8a":"#94a3b8",borderTop:`2px solid ${page===n.id?"#1e3a8a":"transparent"}`,minWidth:0}}>
+            <span style={{fontSize:"18px",lineHeight:1,marginBottom:"2px"}}>{n.icon}</span>
+            <span style={{fontSize:"9px",fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%",textAlign:"center"}}>{n.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div style={{display:"flex",height:"100vh",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",background:"#f8fafc",fontSize:"14px"}}>
