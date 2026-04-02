@@ -201,8 +201,8 @@ function LoginScreen({ onLogin }) {
   };
 
   return (
-    <div style={{minHeight:"100vh",background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",padding:isMob?"0":"16px"}}>
-      <div style={{display:"flex",width:"100%",maxWidth:"900px",borderRadius:isMob?"0":"16px",overflow:"hidden",boxShadow:isMob?"none":"0 24px 64px rgba(0,0,0,0.12)",minHeight:isMob?"100vh":"auto"}}>
+    <div style={{minHeight:"100dvh",background:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",padding:isMob?"0":"16px"}}>
+      <div style={{display:"flex",width:"100%",maxWidth:"900px",borderRadius:isMob?"0":"16px",overflow:"hidden",boxShadow:isMob?"none":"0 24px 64px rgba(0,0,0,0.12)",minHeight:isMob?"100dvh":"auto"}}>
         <div style={{flex:1,background:"linear-gradient(160deg,#0f172a 0%,#1e3a8a 60%,#1d4ed8 100%)",padding:"48px 40px",display:isMob?"none":"flex",flexDirection:"column",justifyContent:"space-between",minWidth:0}}>
           <div>
             <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"40px"}}>
@@ -792,6 +792,7 @@ function Delivery({orders, setOrders, currentUser}) {
 
 // ─── AI PAGE ───────────────────────────────────────────────────
 function AIPage({products, orders}) {
+  const aiWinW = useWindowWidth(); const aiMob = aiWinW < 640;
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("sp_apikey") || "");
   const [keyInput, setKeyInput] = useState("");
   const [showKeySetup, setShowKeySetup] = useState(!localStorage.getItem("sp_apikey"));
@@ -876,7 +877,7 @@ function AIPage({products, orders}) {
           {errMsg && <p style={{margin:"8px 0 0",fontSize:"12px",color:"#dc2626"}}>⚠️ {errMsg}</p>}
         </Card>
       )}
-      <Card style={{display:"flex",flexDirection:"column",height:"460px"}}>
+      <Card style={{display:"flex",flexDirection:"column",height:aiMob?"calc(100dvh - 48px - 60px - 120px)":"460px",minHeight:"300px"}}>
         <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"10px"}}>
           {msgs.map((m,i)=>(
             <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start"}}>
@@ -947,41 +948,39 @@ function UserMgmt({currentUser}) {
       <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาชื่อหรืออีเมล..."
         style={{width:"100%",padding:"9px 12px",border:"1px solid #d1d5db",borderRadius:"6px",fontSize:"13px",marginBottom:"12px",boxSizing:"border-box",outline:"none"}}/>
       <Card>
-        <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead>
-              <tr style={{background:"#f8fafc",borderBottom:"2px solid #e2e8f0"}}>
-                {["ผู้ใช้งาน","ตำแหน่ง / ฝ่าย","เบอร์โทร","สิทธิ์การเข้าถึง","สถานะ","จัดการ"].map(h=>(
-                  <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:"11px",fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap"}}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {fil.map((u,i)=>(
-                <tr key={u.id} style={{borderBottom:"1px solid #f1f5f9",background:i%2===0?"white":"#fafafa",opacity:u.active?1:0.55}}>
-                  <td style={{padding:"10px 12px"}}>
-                    <p style={{margin:0,fontSize:"13px",fontWeight:600,color:"#0f172a"}}>{u.name}</p>
-                    <p style={{margin:0,fontSize:"11px",color:"#94a3b8",fontFamily:"monospace"}}>{u.email}</p>
-                  </td>
-                  <td style={{padding:"10px 12px"}}><Badge role={u.role}/>{u.dept && <p style={{margin:"3px 0 0",fontSize:"11px",color:"#64748b"}}>{u.dept}</p>}</td>
-                  <td style={{padding:"10px 12px",fontSize:"12px",color:"#475569"}}>{u.phone||"—"}</td>
-                  <td style={{padding:"10px 12px"}}><p style={{margin:0,fontSize:"11px",color:"#64748b",lineHeight:1.5}}>{ROLES[u.role]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"สต๊อก",catalog:"แคตตาล็อก",orders:"ออเดอร์",delivery:"จัดส่ง",ai:"AI",users:"ผู้ใช้"}[p]||p)).join(" · ")}</p></td>
-                  <td style={{padding:"10px 12px"}}>
-                    {u.active ? <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใช้งานได้</span>
-                      : <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ระงับแล้ว</span>}
-                  </td>
-                  <td style={{padding:"10px 12px"}}>
-                    <div style={{display:"flex",gap:"4px"}}>
-                      <Btn onClick={()=>toggle(u.id)} variant={u.active?"danger":"success"} size="sm">{u.active?"ระงับ":"เปิดใช้"}</Btn>
-                      {u.id !== currentUser.id && <Btn onClick={()=>{setForm({...u});setModal("edit");}} variant="secondary" size="sm">แก้ไข</Btn>}
-                      {u.id !== currentUser.id && <Btn onClick={()=>del(u.id)} variant="danger" size="sm">ลบ</Btn>}
-                    </div>
-                  </td>
-                </tr>
+        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead>
+            <tr style={{background:"#f8fafc",borderBottom:"2px solid #e2e8f0"}}>
+              {["ผู้ใช้งาน","ตำแหน่ง / ฝ่าย","เบอร์โทร","สิทธิ์การเข้าถึง","สถานะ","จัดการ"].map(h=>(
+                <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:"11px",fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:"0.05em",whiteSpace:"nowrap"}}>{h}</th>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </tr>
+          </thead>
+          <tbody>
+            {fil.map((u,i)=>(
+              <tr key={u.id} style={{borderBottom:"1px solid #f1f5f9",background:i%2===0?"white":"#fafafa",opacity:u.active?1:0.55}}>
+                <td style={{padding:"10px 12px"}}>
+                  <p style={{margin:0,fontSize:"13px",fontWeight:600,color:"#0f172a"}}>{u.name}</p>
+                  <p style={{margin:0,fontSize:"11px",color:"#94a3b8",fontFamily:"monospace"}}>{u.email}</p>
+                </td>
+                <td style={{padding:"10px 12px"}}><Badge role={u.role}/>{u.dept && <p style={{margin:"3px 0 0",fontSize:"11px",color:"#64748b"}}>{u.dept}</p>}</td>
+                <td style={{padding:"10px 12px",fontSize:"12px",color:"#475569"}}>{u.phone||"—"}</td>
+                <td style={{padding:"10px 12px"}}><p style={{margin:0,fontSize:"11px",color:"#64748b",lineHeight:1.5}}>{ROLES[u.role]?.pages.map(p=>({dashboard:"แดชบอร์ด",inventory:"สต๊อก",catalog:"แคตตาล็อก",orders:"ออเดอร์",delivery:"จัดส่ง",ai:"AI",users:"ผู้ใช้"}[p]||p)).join(" · ")}</p></td>
+                <td style={{padding:"10px 12px"}}>
+                  {u.active ? <span style={{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ใช้งานได้</span>
+                    : <span style={{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca",padding:"3px 8px",borderRadius:"4px",fontSize:"11px",fontWeight:600}}>ระงับแล้ว</span>}
+                </td>
+                <td style={{padding:"10px 12px"}}>
+                  <div style={{display:"flex",gap:"4px"}}>
+                    <Btn onClick={()=>toggle(u.id)} variant={u.active?"danger":"success"} size="sm">{u.active?"ระงับ":"เปิดใช้"}</Btn>
+                    {u.id !== currentUser.id && <Btn onClick={()=>{setForm({...u});setModal("edit");}} variant="secondary" size="sm">แก้ไข</Btn>}
+                    {u.id !== currentUser.id && <Btn onClick={()=>del(u.id)} variant="danger" size="sm">ลบ</Btn>}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Card>
       {modal && (
         <Modal title={modal==="add"?"เพิ่มบัญชีผู้ใช้ใหม่":"แก้ไขข้อมูลผู้ใช้"} onClose={()=>setModal(null)} wide>
@@ -1070,7 +1069,7 @@ export default function App() {
   const canManageOrders  = ["admin","manager","sales"].includes(user.role);
 
   if (isMob) return (
-    <div style={{display:"flex",flexDirection:"column",height:"100vh",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",background:"#f8fafc",fontSize:"14px"}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100dvh",minHeight:"-webkit-fill-available",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",background:"#f8fafc",fontSize:"14px"}}>
       {/* Mobile top header */}
       <div style={{background:"#0f172a",padding:"0 16px",height:"48px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
@@ -1084,7 +1083,7 @@ export default function App() {
         </div>
       </div>
       {/* Main content */}
-      <div style={{flex:1,overflowY:"auto",padding:"14px 12px",paddingBottom:"70px"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"14px 12px 80px",WebkitOverflowScrolling:"touch"}}>
         <div style={{maxWidth:"860px",margin:"0 auto"}}>
           {page==="dashboard" && <Dashboard products={products} orders={orders}/>}
           {page==="inventory" && <Inventory products={products} setProducts={setProducts} canEdit={canEditInventory}/>}
@@ -1096,13 +1095,13 @@ export default function App() {
         </div>
       </div>
       {/* Bottom navigation */}
-      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"white",borderTop:"1px solid #e2e8f0",display:"flex",zIndex:100,boxShadow:"0 -4px 12px rgba(0,0,0,0.06)"}}>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"white",borderTop:"1px solid #e2e8f0",display:"flex",overflowX:"auto",zIndex:100,boxShadow:"0 -4px 12px rgba(0,0,0,0.06)",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
         {nav.map(n => (
           <button key={n.id} onClick={()=>setPage(n.id)}
-            style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 2px",border:"none",background:"none",cursor:"pointer",
-              color:page===n.id?"#1e3a8a":"#94a3b8",borderTop:`2px solid ${page===n.id?"#1e3a8a":"transparent"}`,minWidth:0}}>
-            <span style={{fontSize:"18px",lineHeight:1,marginBottom:"2px"}}>{n.icon}</span>
-            <span style={{fontSize:"9px",fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%",textAlign:"center"}}>{n.label}</span>
+            style={{flex:`1 0 ${Math.min(100/nav.length, 20)}%`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"7px 4px",paddingBottom:"calc(7px + env(safe-area-inset-bottom, 0px))",border:"none",background:"none",cursor:"pointer",
+              color:page===n.id?"#1e3a8a":"#94a3b8",borderTop:`2px solid ${page===n.id?"#1e3a8a":"transparent"}`,minWidth:"52px",flexShrink:0}}>
+            <span style={{fontSize:"20px",lineHeight:1,marginBottom:"2px"}}>{n.icon}</span>
+            <span style={{fontSize:"9px",fontWeight:600,whiteSpace:"nowrap",textAlign:"center"}}>{n.label}</span>
           </button>
         ))}
       </div>
@@ -1174,3 +1173,4 @@ export default function App() {
     </div>
   );
 }
+
