@@ -454,6 +454,13 @@ function Delivery({orders, setOrders, currentUser}) {
     return () => { try { bcRef.current?.close(); } catch {} };
   }, [setOrders]);
 
+  // Sync sel when orders update from external sources (BroadcastChannel / polling)
+  useEffect(() => {
+    if (!sel) return;
+    const updated = orders.find(o => o.id === sel.id);
+    if (updated && JSON.stringify(updated) !== JSON.stringify(sel)) setSel(updated);
+  }, [orders]);
+
   const broadcast = newOrders => {
     localStorage.setItem("sp_orders", JSON.stringify(newOrders));
     try { bcRef.current?.postMessage({type:"orders_update", orders:newOrders}); } catch {}
