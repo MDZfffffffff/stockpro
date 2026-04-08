@@ -688,36 +688,60 @@ function Orders({products, orders, setOrders, canManage}) {
   );
 }
 
-// ─── DELIVERY ──────────────────────────────────────────────────
+// ─── DELIVERY (FIXED) ──────────────────────────────────────────
 function Delivery({orders, setOrders, currentUser}) {
-  const myOrders = currentUser.role==="driver" ? orders.filter(o=>o.driver===currentUser.name||o.status==="กำลังจัดส่ง") : orders;
-  const [sel, setSel] = useState(myOrders[0]||null);
+  const myOrders = currentUser.role==="driver"
+    ? orders.filter(o => o.driver === currentUser.name || o.status === "กำลังจัดส่ง")
+    : orders;
+
+  // FIX: เก็บแค่ ID แล้ว derive sel จาก orders ทุกครั้ง → sync อัตโนมัติเมื่อ orders เปลี่ยน
+  const [selId, setSelId] = useState(myOrders[0]?.id || null);
+  const sel = orders.find(o => o.id === selId) || null;
+
   const [photos, setPhotos] = useState([]);
   const [editNote, setEditNote] = useState(false);
   const [noteVal, setNoteVal] = useState("");
   const fileRef = useRef();
   const steps = ["รอดำเนินการ","รอจัดส่ง","กำลังจัดส่ง","จัดส่งแล้ว"];
   const NEXT_STATUS = {"รอจัดส่ง":"กำลังจัดส่ง","กำลังจัดส่ง":"จัดส่งแล้ว"};
+
+  // FIX: auto-select เมื่อ selection หลุด (เช่น order ถูกลบ)
+  useEffect(() => {
+    if (!sel && myOrders.length > 0) setSelId(myOrders[0].id);
+  }, [sel, myOrders]);
+
+  // FIX: ไม่ต้อง setSel เพราะ sel sync จาก orders อัตโนมัติ
   const advanceStatus = () => {
     const next = NEXT_STATUS[sel.status];
     if (!next) return;
-    setOrders(p=>p.map(o=>o.id===sel.id?{...o,status:next}:o));
-    setSel(prev=>({...prev,status:next}));
+    setOrders(p => p.map(o => o.id === sel.id ? {...o, status:next} : o));
   };
+
   const handlePhoto = e => {
     const f = e.target.files[0]; if(!f) return;
     const url = URL.createObjectURL(f);
-    const tryGps = cb => navigator.geolocation ? navigator.geolocation.getCurrentPosition(p=>cb({lat:p.coords.latitude.toFixed(5),lng:p.coords.longitude.toFixed(5)}),()=>cb({lat:"13.75612",lng:"100.49931"})) : cb({lat:"13.75612",lng:"100.49931"});
-    tryGps(({lat,lng})=>setPhotos(p=>[...p,{url,name:f.name,lat,lng,time:new Date().toLocaleTimeString("th-TH")}]));
-    e.target.value="";
+    const tryGps = cb => navigator.geolocation
+      ? navigator.geolocation.getCurrentPosition(
+          p => cb({lat:p.coords.latitude.toFixed(5), lng:p.coords.longitude.toFixed(5)}),
+          () => cb({lat:"13.75612", lng:"100.49931"})
+        )
+      : cb({lat:"13.75612", lng:"100.49931"});
+    tryGps(({lat,lng}) => setPhotos(p => [...p, {url, name:f.name, lat, lng, time:new Date().toLocaleTimeString("th-TH")}]));
+    e.target.value = "";
   };
-  const saveNote = () => { setOrders(p=>p.map(o=>o.id===sel.id?{...o,note:noteVal}:o)); setSel(prev=>({...prev,note:noteVal})); setEditNote(false); };
+
+  // FIX: ไม่ต้อง setSel เพราะ sel sync จาก orders อัตโนมัติ
+  const saveNote = () => {
+    setOrders(p => p.map(o => o.id === sel.id ? {...o, note:noteVal} : o));
+    setEditNote(false);
+  };
+
   return (
     <div>
       <PageHeader title="ติดตามการจัดส่ง" subtitle={currentUser.role==="driver"?"แสดงเฉพาะออเดอร์ที่รับผิดชอบ":"ออเดอร์ทั้งหมด"}/>
       <div style={{display:"flex",flexDirection:"column",gap:"8px",marginBottom:"14px"}}>
         {myOrders.map(o=>(
-          <div key={o.id} onClick={()=>setSel(o)}
+          <div key={o.id} onClick={()=>setSelId(o.id)}
             style={{padding:"12px 14px",borderRadius:"8px",cursor:"pointer",border:"1px solid",transition:"all 0.15s",borderColor:sel?.id===o.id?"#1e3a8a":"#e2e8f0",background:sel?.id===o.id?"#eff6ff":"white"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
@@ -1084,7 +1108,6 @@ export default function App() {
 
   if (isMob) return (
     <div style={{display:"flex",flexDirection:"column",height:"100dvh",minHeight:"-webkit-fill-available",fontFamily:"'Inter','Noto Sans Thai',system-ui,sans-serif",background:"#f8fafc",fontSize:"14px"}}>
-      {/* Mobile top header */}
       <div style={{background:"#0f172a",padding:"0 16px",height:"48px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
           <div style={{width:"26px",height:"26px",background:"#3b82f6",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px"}}>📦</div>
@@ -1096,7 +1119,6 @@ export default function App() {
           <button onClick={handleLogout} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"6px",color:"#94a3b8",fontSize:"12px",padding:"4px 8px",cursor:"pointer"}}>ออก</button>
         </div>
       </div>
-      {/* Main content */}
       <div style={{flex:1,overflowY:"auto",padding:"14px 12px 80px",WebkitOverflowScrolling:"touch"}}>
         <div style={{maxWidth:"860px",margin:"0 auto"}}>
           {page==="dashboard" && <Dashboard products={products} orders={orders}/>}
@@ -1108,7 +1130,6 @@ export default function App() {
           {page==="users"     && user.role==="admin" && <UserMgmt currentUser={user}/>}
         </div>
       </div>
-      {/* Bottom navigation */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"white",borderTop:"1px solid #e2e8f0",display:"flex",overflowX:"auto",zIndex:100,boxShadow:"0 -4px 12px rgba(0,0,0,0.06)",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
         {nav.map(n => (
           <button key={n.id} onClick={()=>setPage(n.id)}
