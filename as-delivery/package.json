@@ -1,0 +1,22 @@
+{
+  "name": "as-delivery",
+  "version": "1.0.0",
+  "description": "AS Welding Supply Co., Ltd. - Delivery Confirmation System",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^9.4.3",
+    "express": "^4.18.3",
+    "express-rate-limit": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.1.1",
+    "sharp": "^0.33.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#C0392B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>AS Delivery</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════ LOGIN PAGE ══════════ -->
+  <div id="page-login" class="page">
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="brand">🚚 AS Delivery</div>
+          <div class="sub">AS Welding Supply Co., Ltd.</div>
+        </div>
+        <div id="login-error" class="alert alert-error" style="display:none"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-username">ชื่อผู้ใช้</label>
+            <input id="login-username" type="text" placeholder="username" autocomplete="username" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">รหัสผ่าน</label>
+            <input id="login-password" type="password" placeholder="password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="login-btn">เข้าสู่ระบบ</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ DRIVER HOME PAGE ══════════ -->
+  <div id="page-driver-home" class="page">
+    <div class="driver-topbar">
+      <div class="driver-topbar-title">🚚 รายการส่งของ</div>
+      <div class="driver-topbar-actions">
+        <span id="offline-indicator" class="offline-indicator">📵 ออฟไลน์</span>
+        <span id="sync-pending-badge" class="sync-badge" style="display:none">0</span>
+        <button class="btn btn-sm" id="btn-driver-logout" style="background:rgba(255,255,255,0.15);color:#fff;">ออกจากระบบ</button>
+      </div>
+    </div>
+    <div class="driver-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div id="driver-greeting" style="font-size:16px;font-weight:600;"></div>
+          <div id="driver-today" style="font-size:14px;color:var(--text-muted);"></div>
+        </div>
+        <button class="btn btn-primary" id="btn-add-delivery">+ เพิ่มรายการ</button>
+      </div>
+      <div id="driver-delivery-list" class="delivery-list">
+        <div class="spinner">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ DRIVER DETAIL PAGE ══════════ -->
+  <div id="page-driver-detail" class="page">
+    <div class="driver-topbar">
+      <button class="back-btn" id="btn-detail-back">←</button>
+      <div class="driver-topbar-title">รายละเอียดการส่ง</div>
+      <div style="width:40px"></div>
+    </div>
+    <div class="driver-content">
+      <div id="detail-alert" class="alert" style="display:none"></div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--text-muted);">Invoice No.</div>
+        <div id="d-invoice" style="font-size:20px;font-weight:700;margin-bottom:12px;"></div>
+        <div style="font-size:13px;color:var(--text-muted);">ลูกค้า</div>
+        <div id="d-customer" style="font-size:18px;font-weight:600;margin-bottom:8px;"></div>
+        <div style="font-size:13px;color:var(--text-muted);">ที่อยู่</div>
+        <div id="d-address" style="font-size:15px;margin-bottom:8px;"></div>
+        <div style="font-size:13px;color:var(--text-muted);">วันที่นัดส่ง</div>
+        <div id="d-date" style="font-size:15px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">รูปภาพสินค้า</div>
+        <div class="photo-label">ถ่ายรูปสินค้า</div>
+        <div class="camera-area" id="camera-goods">
+          <div class="camera-icon">📦</div>
+          <div class="camera-text">กดเพื่อถ่ายรูปสินค้า</div>
+        </div>
+        <input type="file" id="input-goods" accept="image/*" capture="environment" style="display:none" />
+        <div class="photo-row" id="photos-goods"></div>
+
+        <div class="divider"></div>
+
+        <div class="photo-label">ถ่ายรูปเอกสาร / ลายเซ็น</div>
+        <div class="camera-area" id="camera-sig">
+          <div class="camera-icon">✍️</div>
+          <div class="camera-text">กดเพื่อถ่ายรูปเอกสาร / ลายเซ็น</div>
+        </div>
+        <input type="file" id="input-sig" accept="image/*" capture="environment" style="display:none" />
+        <div class="photo-row" id="photos-sig"></div>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label>สถานะการส่ง</label>
+          <select id="d-status">
+            <option value="pending">รอส่ง</option>
+            <option value="delivered">ส่งสำเร็จ</option>
+            <option value="failed">ส่งไม่ได้</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>หมายเหตุ</label>
+          <textarea id="d-note" placeholder="หมายเหตุ..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>วันเวลาที่ส่ง</label>
+          <input type="datetime-local" id="d-delivered-at" />
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" id="btn-save-detail">💾 บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ DRIVER ADD PAGE ══════════ -->
+  <div id="page-driver-add" class="page">
+    <div class="driver-topbar">
+      <button class="back-btn" id="btn-add-back">←</button>
+      <div class="driver-topbar-title">เพิ่มรายการส่ง</div>
+      <div style="width:40px"></div>
+    </div>
+    <div class="driver-content">
+      <div class="card">
+        <div id="add-alert" class="alert" style="display:none"></div>
+
+        <div class="form-group">
+          <label>Invoice No. *</label>
+          <input type="text" id="add-invoice" placeholder="เช่น INV-2024-001" autocomplete="off" />
+        </div>
+
+        <!-- Customer autocomplete -->
+        <div class="form-group">
+          <label>ชื่อลูกค้า * <span id="add-customer-matched" style="font-size:12px;color:var(--success);font-weight:400;"></span></label>
+          <div class="autocomplete-wrap">
+            <input type="text" id="add-customer" placeholder="พิมพ์ชื่อลูกค้า..." autocomplete="off" />
+            <div id="add-customer-dropdown" class="autocomplete-dropdown"></div>
+          </div>
+          <input type="hidden" id="add-customer-id" />
+        </div>
+
+        <!-- หมายเหตุการส่ง (auto-filled จาก customer) -->
+        <div id="add-delivery-note-banner" class="delivery-note-banner" style="display:none">
+          <span class="icon">⚠️</span>
+          <span id="add-delivery-note-text"></span>
+        </div>
+
+        <!-- ข้อมูลผู้ติดต่อ (auto-filled, read-only) -->
+        <div id="add-contact-row" style="display:none;margin-bottom:12px;">
+          <div style="background:#F8FAFC;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">📞</span>
+            <div>
+              <div style="font-size:12px;color:var(--text-muted);">ผู้ติดต่อ / เบอร์โทร</div>
+              <div id="add-contact-info" style="font-size:15px;font-weight:600;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Quick-Add ลูกค้าใหม่ (ซ่อนอยู่ เปิดเมื่อกด "เพิ่มลูกค้าใหม่") ── -->
+        <div id="quick-add-customer-panel" style="display:none;margin-bottom:16px;">
+          <div style="background:#FFF5F5;border:2px solid var(--primary);border-radius:12px;padding:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-size:15px;font-weight:700;color:var(--primary);">➕ เพิ่มลูกค้าใหม่</div>
+              <button id="qa-cancel-btn" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);line-height:1;">×</button>
+            </div>
+            <div id="qa-alert" class="alert" style="display:none;"></div>
+            <div class="form-group">
+              <label>ชื่อลูกค้า *</label>
+              <input type="text" id="qa-name" placeholder="ชื่อบริษัท / ร้าน" autocomplete="off" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px;">
+              <div class="form-group">
+                <label>สาขา</label>
+                <input type="text" id="qa-branch" placeholder="สำนักงานใหญ่" autocomplete="off" />
+              </div>
+              <div class="form-group">
+                <label>เบอร์โทรผู้ติดต่อ</label>
+                <input type="tel" id="qa-contact-phone" placeholder="08x-xxx-xxxx" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>ชื่อผู้ติดต่อ</label>
+              <input type="text" id="qa-contact-name" placeholder="คุณ..." autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label>ที่อยู่</label>
+              <textarea id="qa-address" rows="2" placeholder="ที่อยู่จัดส่ง..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>⚠️ หมายเหตุการส่ง</label>
+              <textarea id="qa-delivery-note" rows="2" placeholder="เช่น แจ้งก่อนส่ง 30 นาที / จอดที่ประตู 2..."></textarea>
+            </div>
+            <button id="qa-save-btn" class="btn btn-primary btn-full" style="font-size:16px;">💾 บันทึกลูกค้าใหม่</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>ที่อยู่จัดส่ง</label>
+          <textarea id="add-address" placeholder="ที่อยู่จัดส่ง (auto-fill จากฐานข้อมูล)" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>วันที่นัดส่ง *</label>
+          <input type="date" id="add-date" />
+        </div>
+
+        <button class="btn btn-primary btn-full btn-lg" id="btn-save-add">+ เพิ่มรายการ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ ADMIN LAYOUT ══════════ -->
+  <div id="page-admin" class="page">
+    <div class="admin-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <div class="brand">🚚 AS Delivery</div>
+          <div class="sub">AS Welding Supply</div>
+        </div>
+        <nav class="sidebar-nav">
+          <a class="nav-item active" data-view="dashboard">
+            <span class="nav-icon">📊</span> Dashboard
+          </a>
+          <a class="nav-item" data-view="customers">
+            <span class="nav-icon">🏢</span> ลูกค้า
+          </a>
+          <a class="nav-item" data-view="users">
+            <span class="nav-icon">👥</span> จัดการผู้ใช้
+          </a>
+          <a class="nav-item" data-view="export">
+            <span class="nav-icon">📥</span> Export
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;" id="admin-user-label"></div>
+          <button class="btn btn-sm btn-danger" id="btn-admin-logout" style="width:100%;">ออกจากระบบ</button>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="admin-main">
+
+        <!-- Dashboard View -->
+        <div id="admin-view-dashboard" class="admin-view">
+          <div class="topbar">
+            <div class="topbar-title">Dashboard</div>
+            <div class="topbar-actions">
+              <input type="date" id="filter-date" style="margin:0;" />
+              <select id="filter-driver" style="margin:0;max-width:160px;">
+                <option value="">ทุก Driver</option>
+              </select>
+              <select id="filter-status" style="margin:0;max-width:140px;">
+                <option value="">ทุกสถานะ</option>
+                <option value="pending">รอส่ง</option>
+                <option value="delivered">ส่งแล้ว</option>
+                <option value="failed">ส่งไม่ได้</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" id="btn-filter-apply">ค้นหา</button>
+              <button class="btn btn-primary btn-sm" id="btn-admin-add">+ เพิ่มรายการ</button>
+            </div>
+          </div>
+          <div class="content">
+            <div class="summary-grid">
+              <div class="summary-card total">
+                <div class="number" id="sum-total">-</div>
+                <div class="label">รายการทั้งหมด</div>
+              </div>
+              <div class="summary-card delivered">
+                <div class="number" id="sum-delivered">-</div>
+                <div class="label">ส่งแล้ว</div>
+              </div>
+              <div class="summary-card pending">
+                <div class="number" id="sum-pending">-</div>
+                <div class="label">รอส่ง</div>
+              </div>
+              <div class="summary-card failed">
+                <div class="number" id="sum-failed">-</div>
+                <div class="label">ส่งไม่ได้</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Invoice No.</th>
+                      <th>ลูกค้า</th>
+                      <th>คนส่ง</th>
+                      <th>วันที่นัดส่ง</th>
+                      <th>วันเวลาส่งจริง</th>
+                      <th>สถานะ</th>
+                      <th>หมายเหตุ</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-deliveries-tbody">
+                    <tr><td colspan="8" class="spinner">กำลังโหลด...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customers View -->
+        <div id="admin-view-customers" class="admin-view" style="display:none">
+          <div class="topbar">
+            <div class="topbar-title">🏢 จัดการลูกค้า</div>
+            <div class="topbar-actions">
+              <input type="text" id="cust-search-input" placeholder="ค้นหาชื่อ / รหัส..." style="margin:0;max-width:220px;" />
+              <button class="btn btn-secondary btn-sm" id="btn-cust-search">ค้นหา</button>
+              <button class="btn btn-primary btn-sm" id="btn-add-customer">+ เพิ่มลูกค้า</button>
+            </div>
+          </div>
+          <div class="content">
+            <div class="card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>รหัส</th>
+                      <th>ชื่อลูกค้า / สาขา</th>
+                      <th>ผู้ติดต่อ</th>
+                      <th>เบอร์โทร</th>
+                      <th>หมายเหตุการส่ง</th>
+                      <th>สถานะ</th>
+                      <th>จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-customers-tbody">
+                    <tr><td colspan="7" class="spinner">กำลังโหลด...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users View -->
+        <div id="admin-view-users" class="admin-view" style="display:none">
+          <div class="topbar">
+            <div class="topbar-title">จัดการผู้ใช้</div>
+            <div class="topbar-actions">
+              <button class="btn btn-primary btn-sm" id="btn-add-user">+ เพิ่มผู้ใช้</button>
+            </div>
+          </div>
+          <div class="content">
+            <div class="card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Username</th>
+                      <th>ชื่อ-นามสกุล</th>
+                      <th>บทบาท</th>
+                      <th>สถานะ</th>
+                      <th>วันที่สร้าง</th>
+                      <th>จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-users-tbody">
+                    <tr><td colspan="6" class="spinner">กำลังโหลด...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export View -->
+        <div id="admin-view-export" class="admin-view" style="display:none">
+          <div class="topbar">
+            <div class="topbar-title">Export ข้อมูล</div>
+          </div>
+          <div class="content">
+            <div class="card" style="max-width:500px;">
+              <div class="card-title" style="margin-bottom:16px;">Export รายงาน</div>
+              <div class="form-group">
+                <label>วันที่เริ่มต้น</label>
+                <input type="date" id="export-from" />
+              </div>
+              <div class="form-group">
+                <label>วันที่สิ้นสุด</label>
+                <input type="date" id="export-to" />
+              </div>
+              <div class="form-group">
+                <label>Driver</label>
+                <select id="export-driver">
+                  <option value="">ทุก Driver</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:12px;margin-top:8px;">
+                <button class="btn btn-primary" id="btn-export-csv">📊 Export CSV</button>
+              </div>
+              <div style="margin-top:12px;font-size:13px;color:var(--text-muted);">
+                ไฟล์ CSV เปิดได้ใน Excel โดยตรง
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Delivery Detail Modal (Admin) -->
+<div id="modal-delivery" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-delivery-title">รายละเอียดการส่ง</div>
+      <button class="modal-close" id="modal-delivery-close">×</button>
+    </div>
+    <div class="modal-body" id="modal-delivery-body"></div>
+  </div>
+</div>
+
+<!-- Add Delivery Modal (Admin) -->
+<div id="modal-add-delivery" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">เพิ่มรายการส่ง</div>
+      <button class="modal-close" id="modal-add-delivery-close">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-add-alert" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Invoice No. *</label>
+        <input type="text" id="madmin-invoice" placeholder="INV-2024-001" autocomplete="off" />
+      </div>
+
+      <!-- Customer dropdown (Admin) -->
+      <div class="form-group">
+        <label>ลูกค้า * <span id="madmin-customer-matched" style="font-size:12px;color:var(--success);font-weight:400;"></span></label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="madmin-customer" placeholder="พิมพ์หรือคลิกเพื่อเลือกลูกค้า..." autocomplete="off" />
+          <div id="madmin-customer-dropdown" class="autocomplete-dropdown"></div>
+        </div>
+        <input type="hidden" id="madmin-customer-id" />
+      </div>
+      <!-- contact info auto-fill -->
+      <div id="madmin-contact-row" style="display:none;margin-bottom:12px;">
+        <div style="background:#F8FAFC;border-radius:8px;padding:10px 14px;font-size:14px;">
+          📞 <span id="madmin-contact-info" style="font-weight:600;"></span>
+        </div>
+      </div>
+      <!-- delivery note banner -->
+      <div id="madmin-delivery-note-banner" class="delivery-note-banner" style="display:none">
+        <span>⚠️</span><span id="madmin-delivery-note-text"></span>
+      </div>
+
+      <div class="form-group">
+        <label>ที่อยู่</label>
+        <textarea id="madmin-address" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>วันที่นัดส่ง *</label>
+        <input type="date" id="madmin-date" />
+      </div>
+      <div class="form-group">
+        <label>Driver *</label>
+        <select id="madmin-driver"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-madmin-cancel">ยกเลิก</button>
+      <button class="btn btn-primary" id="btn-madmin-save">เพิ่มรายการ</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Form Modal -->
+<div id="modal-user" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-user-title">เพิ่มผู้ใช้</div>
+      <button class="modal-close" id="modal-user-close">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-user-alert" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Username *</label>
+        <input type="text" id="uform-username" />
+      </div>
+      <div class="form-group">
+        <label>รหัสผ่าน <span id="uform-pw-hint" style="color:var(--text-muted);font-weight:400;">(เว้นว่างไว้ถ้าไม่เปลี่ยน)</span></label>
+        <input type="password" id="uform-password" placeholder="รหัสผ่าน" />
+      </div>
+      <div class="form-group">
+        <label>ชื่อ-นามสกุล *</label>
+        <input type="text" id="uform-fullname" />
+      </div>
+      <div class="form-group">
+        <label>บทบาท *</label>
+        <select id="uform-role">
+          <option value="driver">Driver</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group" id="uform-active-wrap">
+        <label>สถานะ</label>
+        <select id="uform-active">
+          <option value="1">ใช้งาน</option>
+          <option value="0">ปิดใช้งาน</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-uform-cancel">ยกเลิก</button>
+      <button class="btn btn-primary" id="btn-uform-save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Form Modal -->
+<div id="modal-customer" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-customer-title">เพิ่มลูกค้า</div>
+      <button class="modal-close" id="modal-customer-close">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-customer-alert" class="alert" style="display:none"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+        <div class="form-group">
+          <label>รหัสลูกค้า <span style="color:var(--text-muted);font-weight:400;">(ถ้าว่างจะ auto)</span></label>
+          <input type="text" id="cform-code" placeholder="เช่น CUS-001" />
+        </div>
+        <div class="form-group">
+          <label>สาขา</label>
+          <input type="text" id="cform-branch" placeholder="สำนักงานใหญ่ / สาขา 1" />
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>ชื่อบริษัท / ร้าน *</label>
+          <input type="text" id="cform-name" placeholder="ชื่อลูกค้า" />
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>ที่อยู่จัดส่งหลัก</label>
+          <textarea id="cform-address" rows="2" placeholder="ที่อยู่..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>ชื่อผู้ติดต่อ / ผู้รับสินค้า</label>
+          <input type="text" id="cform-contact-name" placeholder="คุณ..." />
+        </div>
+        <div class="form-group">
+          <label>เบอร์โทรผู้ติดต่อ</label>
+          <input type="tel" id="cform-contact-phone" placeholder="08x-xxx-xxxx" />
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>📋 หมายเหตุการส่ง</label>
+          <textarea id="cform-delivery-note" rows="3" placeholder="เช่น แจ้งก่อนส่ง 30 นาที / รปภ.ต้องการใบส่งสินค้า / จอดที่ประตู 2"></textarea>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">ข้อความนี้จะแสดงเตือน Driver อัตโนมัติเมื่อสร้างรายการส่งให้ลูกค้านี้</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-cform-cancel">ยกเลิก</button>
+      <button class="btn btn-primary" id="btn-cform-save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer History Modal -->
+<div id="modal-customer-history" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-ch-title">ประวัติการส่ง</div>
+      <button class="modal-close" id="modal-ch-close">×</button>
+    </div>
+    <div class="modal-body" id="modal-ch-body"></div>
+  </div>
+</div>
+
+<!-- Image Lightbox -->
+<div id="modal-lightbox" class="modal-overlay" style="background:rgba(0,0,0,0.85)">
+  <div style="position:relative;max-width:90vw;max-height:90vh;">
+    <button class="modal-close" id="lightbox-close" style="position:absolute;top:-12px;right:-12px;background:rgba(255,255,255,0.2);color:#fff;border-radius:50%;width:36px;height:36px;">×</button>
+    <img id="lightbox-img" style="max-width:90vw;max-height:90vh;border-radius:8px;" />
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="/js/db.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/driver/home.js"></script>
+<script src="/js/driver/detail.js"></script>
+<script src="/js/driver/add.js"></script>
+<script src="/js/admin/dashboard.js"></script>
+<script src="/js/admin/users.js"></script>
+<script src="/js/admin/customers.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
